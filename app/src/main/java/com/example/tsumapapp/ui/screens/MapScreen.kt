@@ -8,6 +8,7 @@ import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
+import org.osmdroid.util.BoundingBox
 import java.io.File
 
 @Composable
@@ -35,6 +36,16 @@ fun OSMDMap(    /* настройки для карты OpenStreetMap */
                 controller.setCenter(GeoPoint(latitude, longitude))
 
                 setMultiTouchControls(true) /* чтобы двумя пальцами можно было управлять картой */
+
+                val bounds = BoundingBox(
+                    56.473638,
+                    84.950547,
+                    56.463845,
+                    84.93758,
+                )
+                setScrollableAreaLimitDouble(bounds)    /* задаем границы нашей карты */
+                minZoomLevel = 18.2
+                maxZoomLevel = 21.0
             }
         },
         modifier = modifier
