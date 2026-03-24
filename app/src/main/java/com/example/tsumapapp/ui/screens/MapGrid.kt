@@ -1,66 +1,59 @@
 package com.example.tsumapapp.ui.screens
 
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import kotlin.math.min
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Color
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Overlay
+import org.osmdroid.util.GeoPoint
 
+class GridOverlay : Overlay() {
+    private val paint = Paint().apply{//Настраиваем нашу кисточку для отрисовки
+        color = Color.LTGRAY
+        strokeWidth = 1.5f //Толщина линий
+        style = Paint.Style.STROKE//без заливки
+    }
+    private val cellSizeDegrees = 0.00006  // размер по широте в градусах (lat)
+    private val cellSizeLng = cellSizeDegrees / Math.cos(Math.toRadians(56.47))//для квадратиков делим на коофицент широты(примерно)
+    //переопределяем метод, "когда OSMDroid захочет нарисовать этот overlay — делай вот это"
 
-@Composable
-fun GridOveralay(
-    north: Double,
-    south: Double,
-    east: Double,
-    west: Double,
-    screenWidth: Float,
-    screenHeight: Float
-)
-{
-    Canvas(Modifier.fillMaxSize())
-    {
-        //клетки
-        val cellSizeDegrees = 0.0001
+    override fun draw (canvas: Canvas, mapView: MapView, shadow: Boolean){
+        if(shadow) return//шобы сетка не рисовалась 2 раза из-за теней
 
-        val latRange = north - south
-        val lonRange = east - west
+        val bbox = mapView.boundingBox//видимый прямоугльный части краты када двигаем ее он меняется
+        val north = bbox.latNorth//широты
+        val south = bbox.latSouth
+        val west = bbox.lonWest
+        val east = bbox.lonEast
 
-        val theoreticalCellsX = (lonRange / cellSizeDegrees).toInt()
-        val theoreticalCellsY = (latRange / cellSizeDegrees).toInt()
+        val projection = mapView.projection//переводчик между координатами и пикселями экрана
 
+        val startLat = Math.floor(south / cellSizeDegrees) * cellSizeDegrees//шобы не "плыли" при движении карты и начанались ВСЕГДА с 1 точек
+        val startLng = Math.floor(west  / cellSizeLng) * cellSizeLng
 
-        if (theoreticalCellsX < 1 || theoreticalCellsY < 1) return@Canvas
-
-        val cellSizePx = min(
-            screenWidth / theoreticalCellsX,
-            screenHeight / theoreticalCellsY
-        )
-
-        val cellsX = (screenWidth / cellSizePx).toInt()
-        val cellsY = (screenHeight / cellSizePx).toInt()
-
-        for(i in 0..cellsX)
-        {
-            val xPos = i * cellSizePx
-            drawLine(
-                color = Color.LightGray,
-                start = Offset(x = xPos, y = 0f),
-                end = Offset(x = xPos, y = screenHeight),
-                strokeWidth = 1.dp.toPx()
+        // рисуем вертикальные линии (по долготе)
+        var lng = startLng //начинаем с левого края т.к будем менять занчение в цикле
+        while (lng <= east) {// идём вправо пока не дойдём до правого края экрана.
+            val top = projection.toPixels(GeoPoint(north, lng), null)// объект с полями .x и .y
+            val bottom = projection.toPixels(GeoPoint(south, lng), null)
+            canvas.drawLine(//рисуем линию от верхней точки до нижней точки с нашей кисточкой
+                top.x.toFloat(), top.y.toFloat(),
+                bottom.x.toFloat(), bottom.y.toFloat(),
+                paint
             )
+            lng += cellSizeLng  //шагаем вПРАВО на 1 клетку
         }
-        for(i in 0..cellsY)
-        {
-            val yPos = i * cellSizePx
-            drawLine(
-                color = Color.LightGray,
-                start = Offset(x = 0f, y = yPos),
-                end = Offset(x = screenWidth, y = yPos),
-                strokeWidth = 1.dp.toPx()
+        //теперь горизонатльные линии тоже самое
+        var lat = startLat
+        while (lat <= north) {
+            val left  = projection.toPixels(GeoPoint(lat, west), null)
+            val right = projection.toPixels(GeoPoint(lat, east), null)
+            canvas.drawLine(
+                left.x.toFloat(), left.y.toFloat(),
+                right.x.toFloat(), right.y.toFloat(),
+                paint
             )
+            lat += cellSizeDegrees
         }
     }
 }
