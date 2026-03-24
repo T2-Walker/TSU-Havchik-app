@@ -7,37 +7,58 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import kotlin.math.min
+
 
 @Composable
-fun GridOveralay()
+fun GridOveralay(
+    north: Double,
+    south: Double,
+    east: Double,
+    west: Double,
+    screenWidth: Float,
+    screenHeight: Float
+)
 {
-
     Canvas(Modifier.fillMaxSize())
     {
         //клетки
-        val cellsX = 10
-        val cellsY = 10
+        val cellSizeDegrees = 0.0001
 
-        val cellWidth = size.width / cellsX
-        val cellHeight = size.height / cellsY
+        val latRange = north - south
+        val lonRange = east - west
+
+        val theoreticalCellsX = (lonRange / cellSizeDegrees).toInt()
+        val theoreticalCellsY = (latRange / cellSizeDegrees).toInt()
+
+
+        if (theoreticalCellsX < 1 || theoreticalCellsY < 1) return@Canvas
+
+        val cellSizePx = min(
+            screenWidth / theoreticalCellsX,
+            screenHeight / theoreticalCellsY
+        )
+
+        val cellsX = (screenWidth / cellSizePx).toInt()
+        val cellsY = (screenHeight / cellSizePx).toInt()
 
         for(i in 0..cellsX)
         {
-            val x = i * cellWidth
+            val xPos = i * cellSizePx
             drawLine(
-                color = Color.Gray,
-                start = Offset(x = x, y = 0f),
-                end = Offset(x = x, y = size.height),
+                color = Color.LightGray,
+                start = Offset(x = xPos, y = 0f),
+                end = Offset(x = xPos, y = screenHeight),
                 strokeWidth = 1.dp.toPx()
             )
         }
         for(i in 0..cellsY)
         {
-            val y = i * cellHeight
+            val yPos = i * cellSizePx
             drawLine(
-                color = Color.Gray,
-                start = Offset(x = 0f, y = y),
-                end = Offset(x = size.width, y = y),
+                color = Color.LightGray,
+                start = Offset(x = 0f, y = yPos),
+                end = Offset(x = screenWidth, y = yPos),
                 strokeWidth = 1.dp.toPx()
             )
         }
