@@ -7,13 +7,13 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Overlay
 import org.osmdroid.util.GeoPoint
 
-class GridOverlay : Overlay() {
+class GridOverlay : Overlay() { //наследуем GridOverlay от оверлея osmd
     private val paint = Paint().apply{//Настраиваем нашу кисточку для отрисовки
         color = Color.LTGRAY
         strokeWidth = 1.5f //Толщина линий
         style = Paint.Style.STROKE//без заливки
     }
-    private val cellSizeDegrees = 0.00006  // размер по широте в градусах (lat)
+    private val cellSizeDegrees = 0.000028  // размер по широте в градусах (lat)
     private val cellSizeLng = cellSizeDegrees / Math.cos(Math.toRadians(56.47))//для квадратиков делим на коофицент широты(примерно)
     //переопределяем метод, "когда OSMDroid захочет нарисовать этот overlay — делай вот это"
 
