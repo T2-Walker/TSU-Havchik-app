@@ -61,27 +61,24 @@ fun TSUmapappApp() {
         }
     ) {     /* сам экран */
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            Box(modifier = Modifier.fillMaxSize()) {    /* Box это вариант группировки контента в котором штуки в нем накладываются друг на друга */
-                OSMDMap(modifier = Modifier.fillMaxSize())
+              //рисовался на всех экранах поверх него накладывались разные экраны,
+            // /* Box это вариант группировки контента в котором штуки в нем накладываются друг на друга */
 
+
+            //а теперь OSMDMap внутри ветки appDestantion.A  кластер скрин полностью отделен
                 when (currentDestination) { /* переключение между экранами */
-                    AppDestinations.A -> AzvezdochkaScreen(
-                        modifier = Modifier.padding(
-                            innerPadding
-                        )
-                    )
-
+                    AppDestinations.A -> Box(modifier = Modifier.fillMaxSize()){
+                        OSMDMap(modifier = Modifier.fillMaxSize())
+                        AzvezdochkaScreen(modifier = Modifier.padding(innerPadding))
+                    }
                     AppDestinations.CLUSTER -> ClusterScreen(
-                        modifier = Modifier.padding(
-                            innerPadding
-                        )
+                        modifier = Modifier.padding(innerPadding)
                     )
-                    /* здесь будут другие экраны */
                 }
             }
         }
     }
-}
+
 
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
