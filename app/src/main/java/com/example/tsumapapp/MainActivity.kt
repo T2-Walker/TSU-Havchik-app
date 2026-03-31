@@ -49,7 +49,7 @@ class MainActivity : ComponentActivity() {
 @Composable /* аннотация для того чтобы функция могла создать интерфейс (компилятор перерисовает интерфейс при изменении этой функции */
 fun TSUmapappApp() {
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.A) } /* текущая страница - после by запоминание страницы даже после поворота экрана */
-    val mapViewRef = remember {mutableStateOf<MapView?>(null)} //val чтобы не менялся сам объект на который она указывает, но свойство объекта менять при этом можно, сама переменная - наша карта
+    val mapViewRef = remember {mutableStateOf<MapView?>(null)} //val чтобы не менялся сам объект на который она указывает, но свойство объекта менять при этом можно, сама переменная - наша карт
     var gridVisible by remember { mutableStateOf(true) } //by нужен чтобы тип был boolean а не mutable
 
     NavigationSuiteScaffold(    /* здесь навигация */

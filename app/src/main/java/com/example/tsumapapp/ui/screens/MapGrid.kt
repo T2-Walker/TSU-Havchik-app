@@ -3,6 +3,7 @@ package com.example.tsumapapp.ui.screens
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Color
+import org.osmdroid.util.BoundingBox
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Overlay
 import org.osmdroid.util.GeoPoint
@@ -13,14 +14,22 @@ class GridOverlay : Overlay() { //наследуем GridOverlay от оверл
         strokeWidth = 1.5f //Толщина линий
         style = Paint.Style.STROKE//без заливки
     }
-    private val cellSizeDegrees = 0.000028  // размер по широте в градусах (lat)
+    private val cellSizeDegrees = 0.000023  // размер по широте в градусах (lat)
     private val cellSizeLng = cellSizeDegrees / Math.cos(Math.toRadians(56.47))//для квадратиков делим на коофицент широты(примерно)
     //переопределяем метод, "когда OSMDroid захочет нарисовать этот overlay — делай вот это"
 
     override fun draw (canvas: Canvas, mapView: MapView, shadow: Boolean){
         if(shadow) return//шобы сетка не рисовалась 2 раза из-за теней
 
-        val bbox = mapView.boundingBox//видимый прямоугльный части краты када двигаем ее он меняется
+        val bounds = BoundingBox(
+            56.473322,
+            84.951942,
+            56.464447,
+            84.939221,
+        )
+
+
+        val bbox = bounds//видимый прямоугльный части краты када двигаем ее он меняется
         val north = bbox.latNorth//широты
         val south = bbox.latSouth
         val west = bbox.lonWest

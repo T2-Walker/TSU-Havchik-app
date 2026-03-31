@@ -58,7 +58,7 @@ fun OSMDMap(    /* настройки для карты OpenStreetMap */
 
                     // тут подключаем нашу сетку как слой карты
                     overlays.add(GridOverlay())
-                    mapReact.value = this
+                    mapReact.value = this   //в значение параметра забиваем созданный MapView чтобы потом можно было создавать реактивную переменную
                 }
             },
             modifier = modifier.fillMaxSize()
