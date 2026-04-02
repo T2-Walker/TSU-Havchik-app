@@ -196,6 +196,36 @@ fun treeToLines(node: Treenode, depth: Int = 0): List<String> {
     }
 }
 
+//пРЕДИКктим рекомендацию по ответам пользователя и путь по узлам
+fun predict(
+    node: Treenode,//текущий узел начинаем с корня, при рекурсии идём глубже
+    userInput: Map<String, String>,//ответы пользователя
+    path: List<String> = emptyList()//путь который уже протопали по умолчанию пуст — в начале мы ещё нигде не были а при рекурсии даем накопленный путь
+
+): Pair<String, List<String>> {//возвращаем пару - название кафе + список шагов пути
+    return when (node) {
+        //проверяем тип узла
+        is Treenode.Leaf -> Pair(node.recommendation, path)//дошли до листа — нашли ответ вернули пару
+        //это условие остановки рекурсии
+
+        is Treenode.Question -> {//
+            val userAnswer = userInput[node.attributes]//что пользователь выбрал для текющего признака например бюджетаа
+            val nextNode = node.children[userAnswer]//ищем в трентусу ветку которая соответствует ответу пользователя
+            //node.children - Map всех вето
+
+
+            //Ответ мы не нашли
+            if (nextNode == null) {
+                val firstChild = node.children.values.first()//берем первую ветку как запасной вариант
+                val newPath = path + "${node.attributes} = $userAnswer (Шота нету:( )"//Добавим шаг в путь шо не нашли
+                predict(firstChild, userInput, newPath)//рекурсия с запасной веткой
+            } else {//НАШЛИ
+                val newPath = path + "${node.attributes} = $userAnswer"//добавляем шаг в путь наприемр "budget = low"
+                predict(nextNode, userInput, newPath)//рекккккурсия идем в следующий узел с обновлённым путем
+            }
+        }
+    }
+}
 @Composable
 fun DecisionTreeScreen(modifier: Modifier = Modifier) {
 
