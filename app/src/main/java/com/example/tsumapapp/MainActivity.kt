@@ -74,6 +74,9 @@ fun TSUmapappApp() {
                     AppDestinations.CLUSTER -> ClusterScreen(
                         modifier = Modifier.padding(innerPadding)
                     )
+                    AppDestinations.DECISION_TREE -> DecisionTreeScreen(
+                        modifier = Modifier.padding(innerPadding)
+                    )
                 }
             }
         }
