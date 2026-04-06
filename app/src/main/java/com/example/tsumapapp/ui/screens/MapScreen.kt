@@ -11,15 +11,17 @@ import org.osmdroid.views.MapView//
 import org.osmdroid.util.BoundingBox//
 import java.io.File//
 import androidx.compose.foundation.layout.fillMaxSize//
+import androidx.compose.runtime.MutableState
 
 @Composable
 fun OSMDMap(    /* настройки для карты OpenStreetMap */
 
 
     modifier: Modifier = Modifier,
+    mapReact: MutableState<MapView?>,  //создаем параметр типа MapView, ? нужен потому что при вызове функции этот параметр изначально будет null
     latitude: Double = 56.469807,
     longitude: Double = 84.947217,
-    zoom: Double = 18.7
+    zoom: Double = 18.7,
 ) {
         AndroidView(    /* OSMD не робит с jetpack compose поэтому используем старый AndroidView для карт */
             factory = { context ->  /* конструктор из AndroidView для создания карты один раз при заупске приложения, context - все что телефон предоставляет приложению */
@@ -46,10 +48,10 @@ fun OSMDMap(    /* настройки для карты OpenStreetMap */
                     setMultiTouchControls(true) /* чтобы двумя пальцами можно было управлять картой */
 
                     val bounds = BoundingBox(
-                        56.473638,
-                        84.950547,
-                        56.463845,
-                        84.93758,
+                        56.473322,
+                        84.951942,
+                        56.464447,
+                        84.939221,
                     )
                     setScrollableAreaLimitDouble(bounds)    /* задаем границы нашей карты */
                     minZoomLevel = 18.2
@@ -57,6 +59,7 @@ fun OSMDMap(    /* настройки для карты OpenStreetMap */
 
                     // тут подключаем нашу сетку как слой карты
                     overlays.add(GridOverlay())
+                    mapReact.value = this   //в значение параметра забиваем созданный MapView чтобы потом можно было создавать реактивную переменную
 
                 }
             },
