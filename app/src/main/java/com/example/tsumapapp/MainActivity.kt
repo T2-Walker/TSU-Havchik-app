@@ -25,6 +25,7 @@ import com.example.tsumapapp.ui.theme.TSUmapappTheme
 import com.example.tsumapapp.ui.screens.AzvezdochkaScreen
 import com.example.tsumapapp.ui.screens.OSMDMap
 import com.example.tsumapapp.ui.screens.ClusterScreen
+import com.example.tsumapapp.ui.screens.DecisionTreeScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
