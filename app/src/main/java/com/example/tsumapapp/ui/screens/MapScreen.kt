@@ -1,16 +1,16 @@
 package com.example.tsumapapp.ui.screens
 
-import android.content.Context//
-import androidx.compose.runtime.Composable//
-import androidx.compose.ui.Modifier//
-import androidx.compose.ui.viewinterop.AndroidView//
-import org.osmdroid.config.Configuration//
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory//
-import org.osmdroid.util.GeoPoint//
-import org.osmdroid.views.MapView//
-import org.osmdroid.util.BoundingBox//
-import java.io.File//
-import androidx.compose.foundation.layout.fillMaxSize//
+import android.content.Context
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.viewinterop.AndroidView
+import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.util.BoundingBox
+import java.io.File
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.MutableState
 
 @Composable

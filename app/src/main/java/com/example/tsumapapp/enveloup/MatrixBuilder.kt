@@ -3,6 +3,8 @@ package com.example.tsumapapp.enveloup
 import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.osmdroid.util.GeoPoint
+
 
 object Matrix { // object для того чтобы создать матрицу один раз и всегда обращаться к одной и той же матрице
     private var matrix: Array<IntArray>? = null // private чтобы случайно не изменить матрицу
@@ -20,8 +22,20 @@ object Matrix { // object для того чтобы создать матриц
                 row
             }
 
-            matrix = result
+            matrix = result //первый индекс - линия, второй - колонка
             return@withContext matrix
         }
     }
+}
+
+fun geoPointToMatrix(geoPoint: GeoPoint): Pair<Int, Int> {  //функция для получения позиции точки в матрице по геопоинту
+    val west = 84.939221
+    val south = 56.464447
+    val cellSizeDegrees = 0.000023
+    val cellSizeLng = cellSizeDegrees / Math.cos(Math.toRadians(56.47))
+
+    val col = ((geoPoint.longitude - west) / cellSizeLng).toInt()
+    val row = ((geoPoint.latitude - south) / cellSizeDegrees).toInt()
+
+    return Pair(col, row)
 }

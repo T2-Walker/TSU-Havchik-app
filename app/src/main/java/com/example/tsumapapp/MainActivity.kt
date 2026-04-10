@@ -32,12 +32,27 @@ import com.example.tsumapapp.ui.screens.OSMDMap
 import com.example.tsumapapp.ui.screens.ClusterScreen
 import com.example.tsumapapp.ui.screens.DecisionTreeScreen
 import com.example.tsumapapp.ui.screens.GridOverlay
+import com.example.tsumapapp.enveloup.geoPointToMatrix
+import com.example.tsumapapp.enveloup.Matrix
 import org.osmdroid.views.MapView
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        lifecycleScope.launch {
+            val matrix = Matrix.load(this@MainActivity, R.raw.matrix4)
+
+            // Матрица загружена, можно использовать
+            println("Матрица загружена: ${matrix?.size} x ${matrix?.get(0)?.size}") //? здесь потому что матрица может быть null
+            println("Первый элемент: ${matrix?.get(0)[0]}")
+
+            // Здесь можно обновить UI или передать матрицу куда нужно
+        }
+
         setContent {
             TSUmapappTheme {
                 TSUmapappApp()
@@ -94,7 +109,7 @@ fun TSUmapappApp() {
                 ) {
                     Icon(
                         painter = painterResource(
-                            if (gridVisible) R.drawable.ic_favorite
+                            if (gridVisible) R.drawable.ic_favorite //🚜 надо иконку для сетки - первая иконка если сетка видна, вторая если не видна
                             else R.drawable.ic_favorite
                         ),
                         contentDescription = null
@@ -103,7 +118,8 @@ fun TSUmapappApp() {
 
                 when (currentDestination) { /* переключение между экранами */
                     AppDestinations.A -> AzvezdochkaScreen(
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding,),
+                        mapViewRef
                     )
 
                     AppDestinations.CLUSTER -> ClusterScreen(
