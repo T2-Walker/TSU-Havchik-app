@@ -201,6 +201,64 @@ class neuralNetwork{
         return Pair(hidden, output)
     }
 
+    fun train(input: DoubleArray, label: Int) {
+        //label — правильеный ответ 0-9
+
+        //смотрим что нейронка думает ПРЯМО сейчас
+        val (hidden, output) = forward(input)
+        //от например output = [0.1, 0.8, 02, 0.1, 0.1, 0.1, 0.1, 0.1 0.1, 0.1]
+        //сетка дуамет что это 1 из-за пикселя 0.8
+
+        //строим целевой вектор где it индекс нейрона
+        val target = DoubleArray(outputSize) { if (it == label) 1.0 else 0.0 }
+        //для правильной цифры ставим 1.0 а остальным 0.0
+        //пример лдя 3 target = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        //one-hot encoding —  только один нейрон должен быть активен
+        //на какой нам вектор а патамуша если бы мы сказали "правильный ответ = 3"
+        //то непонятно как изменить 10 выходных нейронов  а вектор говорит точно что должен делать каждый нейрон
+
+        //ошибка выходного слоя
+        //мы ищем наскока каждый выходной нейрон ошибся ии в какую сторону его нужно подвинуть
+        val outputDelta = DoubleArray(outputSize) { i ->
+            (target[i] - output[i]) * sigmoidDerivative(output[i])// разница между правильным и нашим ответом
+            //умножаем на чувствительность нейрона если нейрон уже насыщен
+            //(output примерно 1) — его трудно изменить, поэтому delta маленькая
+        }
+
+        //распространяем ошибку на скрытый слой
+        val hiddenDelta = DoubleArray(hiddenSize) { j ->
+            var error = 0.0
+            for (i in 0 until outputSize) {
+                error += outputDelta[i] * weights2[i][j]
+            }
+            //перебираем все выходные нейроны и для каждого
+            //outputDelta[i] — наскока выходной нейрон i ошибся
+            //weights2[i][j] — наскока скрытый нейрон j влиял на выходной нейрон i
+            error * sigmoidDerivative(hidden[j])
+
+            //тобишь если скрытый нейрон j сильно влиял (большой вес) на
+            //ошибившийся выходной нейрон — значит j тоже виноват
+            //это hiddenDelta "вина" каждого скрытого нейрона используем ее для обновления весов первого слоя
+        }
+
+        //обновляем веса
+        //новый_вес = старый_вес + learningRate * delta * активация
+        //вес уменьшился — скрытый нейрон 3 теперь меньше влияет на "цифра 1" правильно — он слишком сильно его активировал
+        for (i in 0 until outputSize) {
+            bias2[i] += learningRate * outputDelta[i]
+            for (j in 0 until hiddenSize) {
+                weights2[i][j] += learningRate * outputDelta[i] * hidden[j]
+            }
+        }
+
+        //то же самое для весов пиксели-скрытый слой
+        for (j in 0 until hiddenSize) {
+            bias1[j] += learningRate * hiddenDelta[j]
+            for (k in 0 until inputSize) {
+                weights1[j][k] += learningRate * hiddenDelta[j] * input[k]
+            }
+        }
+    }
 }
 @Composable
 fun NeuralNetworkScreen(modifier: Modifier = Modifier) {
