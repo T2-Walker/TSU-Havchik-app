@@ -174,7 +174,32 @@ class neuralNetwork{
     //а если 0 - полностью насыщен, не учится
 
 
+    fun forward(input: DoubleArray): Pair<DoubleArray, DoubleArray> {
+        //25 пикселей которые нарисовал пользователь
+        //возвращаем ДВА массива от скрытый слой и выходной слой для обучения
+        //он распространяет сигнал через сеть
+        //Forward считает что из них получается
 
+        //создаем массив из 16 чисел i — индекс текущего нейрона
+        //если бы была линия по центру hidden[0] = sigmoid(4.5) ≈ 0.99  - нейрон оч активен
+        val hidden = DoubleArray(hiddenSize) { i ->
+            var sum = bias1[i]
+            for (j in 0 until inputSize) {
+                sum += weights1[i][j] * input[j]
+            }
+            sigmoid(sum)
+        }
+
+        //то же самое для выходного слоя — но входы уже не пксели а скрытый слой
+        val output = DoubleArray(outputSize) { i ->
+            var sum = bias2[i]
+            for (j in 0 until hiddenSize) {
+                sum += weights2[i][j] * hidden[j]
+            }
+            sigmoid(sum)
+        }
+        return Pair(hidden, output)
+    }
 
 }
 @Composable
