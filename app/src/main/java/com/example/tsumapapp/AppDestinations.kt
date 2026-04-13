@@ -7,4 +7,5 @@ enum class AppDestinations( /* странцы в приложении */
     A("A*", R.drawable.ic_home),
     CLUSTER("Cluster", R.drawable.ic_favorite),
     DECISION_TREE("Ихдрасиыль", R.drawable.ic_favorite),
+    NEURAL("ДипСакер", R.drawable.ic_favorite),
 }
