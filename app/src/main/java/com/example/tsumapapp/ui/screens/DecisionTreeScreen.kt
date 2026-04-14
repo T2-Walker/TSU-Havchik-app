@@ -281,7 +281,7 @@ fun DecisionTreeScreen(modifier: Modifier = Modifier) {
     }
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(0.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF0072BC))
     ) {
     Column(

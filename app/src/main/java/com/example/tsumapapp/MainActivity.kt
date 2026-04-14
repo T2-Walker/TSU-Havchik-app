@@ -27,6 +27,8 @@ import com.example.tsumapapp.ui.screens.OSMDMap
 import com.example.tsumapapp.ui.screens.ClusterScreen
 import com.example.tsumapapp.ui.screens.DecisionTreeScreen
 
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteDefaults
+import androidx.compose.ui.graphics.Color
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,7 +61,11 @@ fun TSUmapappApp() {
                     onClick = { currentDestination = it }
                 )
             }
-        }
+        },
+        navigationSuiteColors = NavigationSuiteDefaults.colors(
+            navigationBarContainerColor = Color(0xFF0072BC)
+        )
+
     ) {     /* сам экран */
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
               //рисовался на всех экранах поверх него накладывались разные экраны,

@@ -19,8 +19,10 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Overlay
 import java.io.File
+import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 
 //название и координаты мест
@@ -246,10 +248,10 @@ fun ClusterScreen(modifier: Modifier = Modifier) {
             },
             modifier = Modifier.weight(1f)//занимает всё свободное место в Column кроме панели снизу
         )
-
         Column(//🚜 второй колум уже панель управления снизу
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxWidth()
+
                 .padding(10.dp), //🚜отступпы СО ВСЕХ сторон
             horizontalAlignment = Alignment.CenterHorizontally//🚜центрируем по горизонатли
         ) {
@@ -284,4 +286,3 @@ fun ClusterScreen(modifier: Modifier = Modifier) {
         }
     }
 }
-
