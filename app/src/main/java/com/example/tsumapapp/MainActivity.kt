@@ -43,19 +43,15 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        var matrix by mutableStateOf<Array<IntArray>?>(null)    //сначала создаем null матрицу, далее заполним ее из csv файла
         lifecycleScope.launch {
-            val matrix = Matrix.load(this@MainActivity, R.raw.matrix4)
+            matrix = Matrix.load(this@MainActivity, R.raw.matrix4)
 
-            // Матрица загружена, можно использовать
-            println("Матрица загружена: ${matrix?.size} x ${matrix?.get(0)?.size}") //? здесь потому что матрица может быть null
-            println("Первый элемент: ${matrix?.get(0)[0]}")
-
-            // Здесь можно обновить UI или передать матрицу куда нужно
         }
 
         setContent {
             TSUmapappTheme {
-                TSUmapappApp()
+                TSUmapappApp(matrix = matrix)
             }
         }
     }
@@ -63,7 +59,9 @@ class MainActivity : ComponentActivity() {
 
 @PreviewScreenSizes /* аннотация для того чтобы функция работала на разных размерах экрана (вроде бы) */
 @Composable /* аннотация для того чтобы функция могла создать интерфейс (компилятор перерисовает интерфейс при изменении этой функции */
-fun TSUmapappApp() {
+fun TSUmapappApp(
+    matrix: Array<IntArray>? = null
+) {
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.A) } /* текущая страница - после by запоминание страницы даже после поворота экрана */
     val mapViewRef = remember {mutableStateOf<MapView?>(null)} //val чтобы не менялся сам объект на который она указывает, но свойство объекта менять при этом можно, сама переменная - наша карт
     var gridVisible by remember { mutableStateOf(true) } //by нужен чтобы тип был boolean а не mutable
@@ -119,7 +117,8 @@ fun TSUmapappApp() {
                 when (currentDestination) { /* переключение между экранами */
                     AppDestinations.A -> AzvezdochkaScreen(
                         modifier = Modifier.padding(innerPadding,),
-                        mapViewRef
+                        mapViewRef,
+                        matrix
                     )
 
                     AppDestinations.CLUSTER -> ClusterScreen(

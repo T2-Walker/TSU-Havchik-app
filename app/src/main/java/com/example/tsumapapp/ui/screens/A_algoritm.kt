@@ -11,14 +11,24 @@ import androidx.compose.runtime.MutableState
 import androidx.core.content.ContextCompat
 import com.example.tsumapapp.R
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.painterResource
 import com.example.tsumapapp.enveloup.geoPointToMatrix
 import com.example.tsumapapp.enveloup.Matrix
+import com.example.tsumapapp.enveloup.matrixToGeoPoint
+import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.sqrt
+import org.osmdroid.views.overlay.Polyline
 
 object Azvezdochka_algoritm {
     private var isInitialized = false
@@ -42,7 +52,7 @@ object Azvezdochka_algoritm {
             override fun longPressHelper(p: GeoPoint?): Boolean = false
         }
 
-        val eventsOverlay = MapEventsOverlay(receiver)
+        val eventsOverlay = MapEventsOverlay(receiver)  //создаем оверлей для событий, он не накладывает ничего визуально, а нужен чтобы перехватывать события
         currentOverlay = eventsOverlay
         map.overlays.add(0, eventsOverlay)
         map.invalidate()
@@ -76,23 +86,176 @@ object Azvezdochka_algoritm {
         map.overlays.add(marker)
         map.invalidate()
     }
+
+    // дальше сам алгоритм
+    data class Node(    // узел - клетка на карте
+        val row: Int,
+        val col: Int,
+        var g: Double = Double.MAX_VALUE,  // стоимость от старта до этого узла
+        var h: Double = 0.0,               // эвристика до цели
+        var f: Double = Double.MAX_VALUE,   // f это общая предполагаемая стоимость пути через узел, g - сколько уже прошли, h - сколько осталось
+        var parent: Node? = null           // для восстановления пути
+    )
+
+    private val directions = arrayOf(   // нправления движения
+        -1 to 0,   // вверх     to создает кортеж пар
+        1 to 0,    // вниз
+        0 to -1,   // влево
+        0 to 1,    // вправо
+        -1 to -1,  // вверх-влево
+        -1 to 1,   // вверх-вправо
+        1 to -1,   // вниз-влево
+        1 to 1     // вниз-вправо
+    )
+
+    private fun heur(row1: Int, col1: Int, row2: Int, col2: Int): Double {  //эвристика - диагональное расстояние
+        return max(abs(row1 - row2), abs(col1 - col2)).toDouble()
+    }
+
+    fun findPath(matrix: Array<IntArray>, startRow: Int, startCol: Int, endRow: Int, endCol: Int): List<Pair<Int, Int>>? {  //функция поиска пути
+        if (matrix[startRow][startCol] == 1 || matrix[endRow][endCol] == 1) {    // Проверка валидности старта и цели
+            return null  // старт или цель на стене
+        }
+
+        val rows = matrix.size
+        val cols = matrix[0].size
+
+        val openSet = mutableSetOf<Node>()  // открытйц список - для узлов по которым еще не прошлись
+        val closedSet = mutableSetOf<Node>()    // закрытый список - для узлов по которым прошли
+
+        val startNode = Node(startRow, startCol, g = 0.0)      // стартовый и целевой узлы
+        startNode.h = heur(startRow, startCol, endRow, endCol)  //задаем эвристику - сколько осталось до цели
+        startNode.f = startNode.g + startNode.h
+        openSet.add(startNode)
+
+        val nodeMap = mutableMapOf<Pair<Int, Int>, Node>()  // карта для быстрого доступа к узлам по координатам
+        nodeMap[startRow to startCol] = startNode
+
+        while (openSet.isNotEmpty()) {  // пока у нас есть узлы по которым не прошлись
+            val current = openSet.minByOrNull { it.f } ?: break // minByOrNull находит элемент с самым маленьким значением того что в скобках, ломаем цикл если ссписок пуст
+            openSet.remove(current)
+            closedSet.add(current)  // текущий узел переносим в закрытый список
+
+            if (current.row == endRow && current.col == endCol) {   // если текущий узел это цель - возвращаем путь, цикл закроется на следующей итерации
+                return reconstructPath(current)
+            }
+
+            for ((dr, dc) in directions) {  // для каждого узла проверяем соседей по 8ми направлениям
+                val newRow = current.row + dr
+                val newCol = current.col + dc
+
+                if (newRow !in (0 until rows) || newCol !in (0 until cols)) continue    //until создает диапазон range, здесь мы проверяем не выходим ли мы за границы матрицы
+                if (matrix[newRow][newCol] == 1) continue   // проверяем проходима ли клетко
+
+                val neighbor = nodeMap.getOrPut(newRow to newCol) { // getorput получает значение по ключу или создает новое - узел по координатам матрицы
+                    Node(newRow, newCol)                                // он здесь нужен чтобы не добавлять один и тот же узел в мапу по нескольку раз
+                }                                                     //а вообще здесь мы ищем соседний узел
+
+                if (closedSet.contains(neighbor)) continue  //если сосед в закрытом списке, то есть мы уже проходились по нему - скип
+
+                val stepCost = if (dr != 0 && dc != 0) 1.414 else 1.0   //стоимость шага - 1 по прямой и √2 для диагонали
+                val gDir = current.g + stepCost   //стоимость хода по текущему направлению
+
+                //обновляем данные узла соседа
+                if (gDir < neighbor.g || !openSet.contains(neighbor)) { //если g соседа больше - значит мы нашли более короткий путь до старта,
+                    neighbor.parent = current     // если соседа нет в открытом списке или его g был больше - заполняем его данные
+                    neighbor.g = gDir
+                    neighbor.h = heur(neighbor.row, neighbor.col, endRow, endCol)
+                    neighbor.f = neighbor.g + neighbor.h
+
+                    if (!openSet.contains(neighbor)) {  //добавляем соседа в открытый список
+                        openSet.add(neighbor)
+                    }
+                }
+            }
+        }
+        return null //если мы не нашли целевой узел - возвращаем null
+    }
+
+    private fun reconstructPath(endNode: Node): List<Pair<Int, Int>> {  // восстанавливаем путь чтобы потом нарисовать его на карте
+        val path = mutableListOf<Pair<Int, Int>>()
+        var current: Node? = endNode
+        while (current != null) {
+            path.add(current.row to current.col)
+            current = current.parent
+        }
+        return path.reversed()  // от старта к цели
+    }
+
+    //функция для отображения пути на карте
+    fun displayPath(mapViewRef: MutableState<MapView?>, path: List<Pair<Int, Int>>) {
+        val map = mapViewRef.value ?: return    //если нет мапы - возвращаем ничего
+
+        val geoPoints = path.map { (row, col) ->    //переводим каждый узел из элемента матрицы обратно в координаты
+            matrixToGeoPoint(row, col)
+        }
+
+        val polyline = Polyline()   // polyline это osmd-шная линия которая рисуется по гео координатам
+        polyline.setPoints(geoPoints)
+        val paint = polyline.getOutlinePaint()
+        paint.color = android.graphics.Color.CYAN   //настрйока цвета и ширины линии
+        paint.strokeWidth = 5.0f
+
+        map.overlays.add(polyline)
+        map.invalidate()
+    }
+
+    fun removeLines(mapViewRef: MutableState<MapView?>) {   //функция чтобы убрать линии
+        val map = mapViewRef.value ?: return
+        val existingLines = map.overlays.filterIsInstance<Polyline>()
+        map.overlays.removeAll(existingLines)
+    }
 }
 
 @Composable
-fun AzvezdochkaScreen(modifier: Modifier = Modifier, mapViewRef: MutableState<MapView?>){
+fun AzvezdochkaScreen(modifier: Modifier = Modifier, mapViewRef: MutableState<MapView?>, matrix: Array<IntArray>?){
+    var markers by remember { mutableStateOf<List<GeoPoint>>(emptyList()) }
 
     LaunchedEffect(Unit) {
-        Azvezdochka_algoritm.enableMarkers(mapViewRef)
+        Azvezdochka_algoritm.enableMarkers(mapViewRef, onMarkerAdded = { geoPoint ->
+            if (matrix == null) {   // проверка загрузилась ли матрица
+                Toast.makeText(mapViewRef.value?.context, "Матрица еще загружается", Toast.LENGTH_SHORT).show()
+                return@enableMarkers
+            }
+
+            markers = markers + geoPoint //добавляем маркер который пользователь поставил в лист маркеров
+
+            if (markers.size == 2) {
+                val startMatrix = geoPointToMatrix(markers[0])  //преобразуем маркеры в элемент матрицы
+                val endMatrix = geoPointToMatrix(markers[1])
+
+                val path = Azvezdochka_algoritm.findPath(
+                    matrix,
+                    startMatrix.first,
+                    startMatrix.second,
+                    endMatrix.first,
+                    endMatrix.second
+                )
+
+                if (path != null) {
+                    Azvezdochka_algoritm.displayPath(mapViewRef, path)
+                } else {
+                    Toast.makeText( //toast это виджет для высплывающих сообщений
+                        mapViewRef.value?.context,
+                        "Путь не найден",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                markers = emptyList()
+                Azvezdochka_algoritm.clearAllMarkers(mapViewRef)
+            }
+        })
     }
 
-    // Выключаем при уходе с экрана
-    DisposableEffect(Unit) {
+    DisposableEffect(Unit) {    //выключаем мектки на карте при переключении экрана
         onDispose {
             Azvezdochka_algoritm.disableMarkers(mapViewRef)
+            Azvezdochka_algoritm.removeLines(mapViewRef)
         }
     }
 
-    Column {
+    //  !!это пока не трогаем!!
+    /*Column {
         Button(onClick = {
             Azvezdochka_algoritm.clearAllMarkers(mapViewRef)
         }) {
@@ -103,6 +266,6 @@ fun AzvezdochkaScreen(modifier: Modifier = Modifier, mapViewRef: MutableState<Ma
                 contentDescription = null
             )
         }
-    }
+    }*/
 
 }

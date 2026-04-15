@@ -39,3 +39,15 @@ fun geoPointToMatrix(geoPoint: GeoPoint): Pair<Int, Int> {  //функция д�
 
     return Pair(col, row)
 }
+
+fun matrixToGeoPoint(row: Int, col: Int): GeoPoint {    //и наоборот
+    val west = 84.939221
+    val south = 56.464447
+    val cellSizeDegrees = 0.000023
+    val cellSizeLng = cellSizeDegrees / Math.cos(Math.toRadians(56.47))
+
+    val latitude = south + row * cellSizeDegrees
+    val longitude = west + col * cellSizeLng
+
+    return GeoPoint(latitude, longitude)
+}
