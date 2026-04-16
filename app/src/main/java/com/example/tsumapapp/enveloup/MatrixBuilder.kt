@@ -28,6 +28,7 @@ object Matrix { // object для того чтобы создать матриц
     }
 }
 
+/*
 fun geoPointToMatrix(geoPoint: GeoPoint): Pair<Int, Int> {  //функция для получения позиции точки в матрице по геопоинту
     val west = 84.939221
     val south = 56.464447
@@ -48,6 +49,45 @@ fun matrixToGeoPoint(row: Int, col: Int): GeoPoint {    //и наоборот
 
     val latitude = south + row * cellSizeDegrees
     val longitude = west + col * cellSizeLng
+
+    return GeoPoint(latitude, longitude)
+}
+*/
+
+fun geoPointToMatrix(geoPoint: GeoPoint): Pair<Int, Int> {
+    val north = 56.473322
+    val east = 84.951942
+    val south = 56.464447
+    val west = 84.939221
+
+    val rows = 385
+    val cols = 305
+
+    val cellSizeLat = (north - south) / rows
+    val cellSizeLng = (east - west) / cols
+
+    val row = ((geoPoint.latitude - south) / cellSizeLat).toInt()
+    val col = ((geoPoint.longitude - west) / cellSizeLng).toInt()
+
+    val invertedrow = rows - row    //инвертируем строки потому что счет идет от юга к северу, а нам нужны координаты от севера к югу
+
+    return Pair(invertedrow, col)
+}
+
+fun matrixToGeoPoint(row: Int, col: Int): GeoPoint {
+    val north = 56.473322
+    val east = 84.951942
+    val south = 56.464447
+    val west = 84.939221
+
+    val rows = 385
+    val cols = 305
+
+    val cellSizeLat = (north - south) / rows
+    val cellSizeLng = (east - west) / cols
+
+    val latitude = south + (row) * cellSizeLat
+    val longitude = west + (col) * cellSizeLng
 
     return GeoPoint(latitude, longitude)
 }

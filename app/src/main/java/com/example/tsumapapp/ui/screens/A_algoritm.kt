@@ -260,6 +260,16 @@ fun AzvezdochkaScreen(modifier: Modifier = Modifier, mapViewRef: MutableState<Ma
                     println("Обратно конец: ${endGeo.latitude}, ${endGeo.longitude}")
                     println("Разница старт: ${geoPoint.latitude - startGeo.latitude}, ${geoPoint.longitude - startGeo.longitude}")
 
+
+                    val west = 84.939221
+                    val south = 56.464447
+                    val firstPoint = matrixToGeoPoint(0, 0)      // должно быть близко к south, west
+                    val lastPoint = matrixToGeoPoint(384, 304)
+                    println("Реальный south: ${firstPoint.latitude}, должно быть: $south")
+                    println("Реальный west: ${firstPoint.longitude}, должно быть: $west")
+                    println("Реальный north: ${lastPoint.latitude}")
+                    println("Реальный east: ${lastPoint.longitude}")
+
                     coroutineScope.launch {
                         val path = Azvezdochka_algoritm.findPath(
                             matrix,
