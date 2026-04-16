@@ -29,6 +29,12 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.sqrt
 import org.osmdroid.views.overlay.Polyline
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 
 object Azvezdochka_algoritm {
     private var isInitialized = false
@@ -44,8 +50,10 @@ object Azvezdochka_algoritm {
 
         val receiver = object : MapEventsReceiver { //создаем листенер еще раз если до этого переключались между экранами и снова нажали на экран А*
             override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
-                p?.let { geoPoint ->
-                    addMarker(map, geoPoint)
+                println("singleTapConfirmedHelper called")
+                p?.let { geoPoint ->    //для каждого геопоинта от перехваченного нажатия на экран добавляем метку
+                    println("GeoPoint: ${geoPoint.latitude}, ${geoPoint.longitude}")
+                    onMarkerAdded(geoPoint)
                 }
                 return true
             }
@@ -54,8 +62,9 @@ object Azvezdochka_algoritm {
 
         val eventsOverlay = MapEventsOverlay(receiver)  //создаем оверлей для событий, он не накладывает ничего визуально, а нужен чтобы перехватывать события
         currentOverlay = eventsOverlay
-        map.overlays.add(0, eventsOverlay)
+        map.overlays.add(eventsOverlay)
         map.invalidate()
+        println("enableMarkers: overlay added, total overlays: ${map.overlays.size}")
     }
 
     fun disableMarkers(mapViewRef: MutableState<MapView?>) {    //отключение оверлея с маркерами
@@ -76,6 +85,7 @@ object Azvezdochka_algoritm {
 
 
     fun addMarker(map: MapView, geoPoint: GeoPoint) {   //добавляем маркер на карту и накачиваем его свойствами
+        println("addMarker called, current overlays: ${map.overlays.size}")
         val context = map.context
         val marker = Marker(map)
         val icon = ContextCompat.getDrawable(context, R.drawable.ic_home)   //🚜 надо иконку для метки на мапе
@@ -112,9 +122,12 @@ object Azvezdochka_algoritm {
         return max(abs(row1 - row2), abs(col1 - col2)).toDouble()
     }
 
-    fun findPath(matrix: Array<IntArray>, startRow: Int, startCol: Int, endRow: Int, endCol: Int): List<Pair<Int, Int>>? {  //функция поиска пути
+    suspend fun findPath(matrix: Array<IntArray>, startRow: Int, startCol: Int, endRow: Int, endCol: Int): List<Pair<Int, Int>>? = withContext(Dispatchers.Default) {  //функция поиска пути
+        println("AStar.findPath called")
+        println("start: ($startRow, $startCol), end: ($endRow, $endCol)")
+
         if (matrix[startRow][startCol] == 1 || matrix[endRow][endCol] == 1) {    // Проверка валидности старта и цели
-            return null  // старт или цель на стене
+            return@withContext null  // старт или цель на стене
         }
 
         val rows = matrix.size
@@ -137,7 +150,7 @@ object Azvezdochka_algoritm {
             closedSet.add(current)  // текущий узел переносим в закрытый список
 
             if (current.row == endRow && current.col == endCol) {   // если текущий узел это цель - возвращаем путь, цикл закроется на следующей итерации
-                return reconstructPath(current)
+                return@withContext reconstructPath(current)
             }
 
             for ((dr, dc) in directions) {  // для каждого узла проверяем соседей по 8ми направлениям
@@ -169,7 +182,8 @@ object Azvezdochka_algoritm {
                 }
             }
         }
-        return null //если мы не нашли целевой узел - возвращаем null
+        println("AStar.findPath: path not found")
+        return@withContext null //если мы не нашли целевой узел - возвращаем null
     }
 
     private fun reconstructPath(endNode: Node): List<Pair<Int, Int>> {  // восстанавливаем путь чтобы потом нарисовать его на карте
@@ -185,6 +199,8 @@ object Azvezdochka_algoritm {
     //функция для отображения пути на карте
     fun displayPath(mapViewRef: MutableState<MapView?>, path: List<Pair<Int, Int>>) {
         val map = mapViewRef.value ?: return    //если нет мапы - возвращаем ничего
+
+        removeLines(mapViewRef)
 
         val geoPoints = path.map { (row, col) ->    //переводим каждый узел из элемента матрицы обратно в координаты
             matrixToGeoPoint(row, col)
@@ -205,44 +221,73 @@ object Azvezdochka_algoritm {
         val existingLines = map.overlays.filterIsInstance<Polyline>()
         map.overlays.removeAll(existingLines)
     }
+
+    fun reset() {
+        currentOverlay = null
+        isInitialized = false
+    }
 }
 
 @Composable
 fun AzvezdochkaScreen(modifier: Modifier = Modifier, mapViewRef: MutableState<MapView?>, matrix: Array<IntArray>?){
+    val coroutineScope = rememberCoroutineScope()
     var markers by remember { mutableStateOf<List<GeoPoint>>(emptyList()) }
 
     LaunchedEffect(Unit) {
+        Azvezdochka_algoritm.reset()
         Azvezdochka_algoritm.enableMarkers(mapViewRef, onMarkerAdded = { geoPoint ->
             if (matrix == null) {   // проверка загрузилась ли матрица
                 Toast.makeText(mapViewRef.value?.context, "Матрица еще загружается", Toast.LENGTH_SHORT).show()
                 return@enableMarkers
             }
 
+            println("Поставляенный geoPoint: ${geoPoint.latitude}, ${geoPoint.longitude}")
+
+            Azvezdochka_algoritm.addMarker(mapViewRef.value!!, geoPoint)    // наносим марккер на карту кастомной функцией
             markers = markers + geoPoint //добавляем маркер который пользователь поставил в лист маркеров
 
-            if (markers.size == 2) {
-                val startMatrix = geoPointToMatrix(markers[0])  //преобразуем маркеры в элемент матрицы
-                val endMatrix = geoPointToMatrix(markers[1])
+            when (markers.size) {
+                2 -> {
+                    val startMatrix = geoPointToMatrix(markers[0])  //преобразуем маркеры в элемент матрицы
+                    val endMatrix = geoPointToMatrix(markers[1])
 
-                val path = Azvezdochka_algoritm.findPath(
-                    matrix,
-                    startMatrix.first,
-                    startMatrix.second,
-                    endMatrix.first,
-                    endMatrix.second
-                )
+                    val startGeo = matrixToGeoPoint(startMatrix.first, startMatrix.second)
+                    val endGeo = matrixToGeoPoint(endMatrix.first, endMatrix.second)
 
-                if (path != null) {
-                    Azvezdochka_algoritm.displayPath(mapViewRef, path)
-                } else {
-                    Toast.makeText( //toast это виджет для высплывающих сообщений
-                        mapViewRef.value?.context,
-                        "Путь не найден",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    println("Перевод в матрицу стартовой точк: ${startMatrix.first}, ${startMatrix.second}")
+                    println("Перевод в матрицу конечной точки: ${endMatrix.first}, ${endMatrix.second}")
+                    println("Обратно старт: ${startGeo.latitude}, ${startGeo.longitude}")
+                    println("Обратно конец: ${endGeo.latitude}, ${endGeo.longitude}")
+                    println("Разница старт: ${geoPoint.latitude - startGeo.latitude}, ${geoPoint.longitude - startGeo.longitude}")
+
+                    coroutineScope.launch {
+                        val path = Azvezdochka_algoritm.findPath(
+                            matrix,
+                            startMatrix.first,
+                            startMatrix.second,
+                            endMatrix.first,
+                            endMatrix.second
+                        )
+
+                        withContext(Dispatchers.Main) {
+                            if (path != null) {
+                                Azvezdochka_algoritm.displayPath(mapViewRef, path)
+                            } else {
+                                Toast.makeText( //toast это виджет для высплывающих сообщений
+                                    mapViewRef.value?.context,
+                                    "Путь не найден",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    }
                 }
-                markers = emptyList()
-                Azvezdochka_algoritm.clearAllMarkers(mapViewRef)
+                3 -> {
+                    Azvezdochka_algoritm.clearAllMarkers(mapViewRef)
+                    Azvezdochka_algoritm.removeLines(mapViewRef)
+                    markers = emptyList()
+
+                }
             }
         })
     }

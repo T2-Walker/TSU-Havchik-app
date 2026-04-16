@@ -39,14 +39,17 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+    private var matrix by mutableStateOf<Array<IntArray>?>(null)    //сначала создаем null матрицу, далее заполним ее из csv файла
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
-        var matrix by mutableStateOf<Array<IntArray>?>(null)    //сначала создаем null матрицу, далее заполним ее из csv файла
         lifecycleScope.launch {
-            matrix = Matrix.load(this@MainActivity, R.raw.matrix4)
-
+            val loadedmatrix = Matrix.load(this@MainActivity, R.raw.matrix4)    //еще одна перемернная потому что без нее все ломается
+            matrix = loadedmatrix
+            if (loadedmatrix != null) {
+                println("Матрица загружена: ${matrix!!.size} x ${matrix!![0].size}")
+            }
         }
 
         setContent {
