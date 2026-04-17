@@ -18,6 +18,7 @@ import androidx.compose.material3.*
 import android.R
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import org.xml.sax.Attributes
 
@@ -283,195 +284,203 @@ fun DecisionTreeScreen(modifier: Modifier = Modifier) {
         shape = RoundedCornerShape(0.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF0072BC))
     ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
-            .background(
-                Color(0xFFE0F5FF),//фон в ихдрасиыль
-                shape = RoundedCornerShape(24.dp)
-            )
-    ) {
-        //загоооловок
-
-        Text(
-            text = "                    Я есть Гхрут",//мега отступ типо чтоб посередине было
-            fontSize = 22.sp,
-            fontWeight = FontWeight.ExtraBold,
-            color = Color(0xFF0072BC),//цвет текста
-
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-
-        //кнопачка загрузки CSV
-        Button(
-            onClick = { filePicker.launch("text/*") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0072BC)) //фон кнопачки
-
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
+                .background(
+                    Color(0xFFE0F5FF),//фон в ихдрасиыль
+                    shape = RoundedCornerShape(24.dp)
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("📂 Наэнвелоупить CSV")
-        }
+            //загоооловок
 
-        //показываем сколько символов загружено по рофлу
-        if (csvText.isNotEmpty()) {
             Text(
-                //прикольная галочка
-                text = "✓ Залито ${csvText.length} символов",
-                fontSize = 13.sp,
-                color = Color(0xFF1F2256)
+                text = "Я есть Гхрут",//мега отступ типо чтоб посередине было
+                fontSize = 22.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = Color(0xFF0072BC),//цвет текста
+
             )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-
-        //осеменяем гхрута
-        Button(
-            onClick = {
-                errorMessage = ""
-                prediction = ""
-                predictionPath = emptyList()
-
-                //но но но
-                if (csvText.isBlank()) {
-                    errorMessage = "Сначала загрузите CSV файл!"
-                    return@Button
-                }
-
-                //о великий парс работай CSV
-                val rows = parseCsv(csvText)
-
-                if (rows.isEmpty()) {
-                    errorMessage = "Ни шо не пойму("
-                    return@Button
-                }
-
-                //собираем список признаков из первой строки
-                val attrs = rows.first().attrributes.keys.toList()
-                attributes = attrs
-                //собираем возможные значения каждого признака
-                attributeValues = attrs.associateWith { attr ->
-                    rows.map { it.attrributes[attr] ?: "" }.distinct()
-                }
-                //Энвелоупинг грута
-                tree = buildTree(rows, attrs)
-
-                //ферст предикт
-                userInput = attrs.associateWith { attr ->
-                    attributeValues[attr]?.firstOrNull() ?: ""
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0072BC))//фон кнопачки
-        ) {
-            Text("🌳 Слепить буратино")
-        }
-    }
-        //🚜если шота не так
-        if (errorMessage.isNotEmpty()) {
-            Text(
-                text = errorMessage,
-                color = androidx.compose.ui.graphics.Color.Red,
-                fontSize = 14.sp
-            )
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        //холый хрут
-        tree?.let { currentTree ->
-            Text(
-                text = "Структура дерева:",
-                fontSize = 18.sp,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-            //та самая функция шо дерево в список строк бацает и показываем каждую строку
-            treeToLines(currentTree).forEach { line ->
-                Text(
-                    text = line,
-                    fontSize = 14.sp,
-                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
-                )
-            }
-            Spacer(modifier = Modifier.height(24.dp))
-            //блок предикта
-            Text(
-                text = "Получить рекомендацию:",
-                fontSize = 18.sp,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            //кнопачки выбора ля каждоого признака
-            attributes.forEach { attr ->
-                Text(
-                    text = attr,
-                    fontSize = 14.sp,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
-                )
-                androidx.compose.foundation.layout.FlowRow {
-                    attributeValues[attr]?.forEach { value ->
-                        val isSelected = userInput[attr] == value
-                        Button(
-                            onClick = {
-                                userInput = userInput.toMutableMap()
-                                    .apply { put(attr, value) }
-                            },
-                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                                containerColor = if (isSelected)
-                                    androidx.compose.ui.graphics.Color(0xFF1565C0)
-                                else
-                                    androidx.compose.ui.graphics.Color(0xFF90CAF9)
-                            ),
-                            modifier = Modifier.padding(2.dp)
-                        ) {
-                            Text(value, fontSize = 12.sp)
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-            }
             Spacer(modifier = Modifier.height(12.dp))
 
-            //кнпка предикта
+            //кнопачка загрузки CSV
             Button(
-                onClick = {
-                    val (result, path) = predict(currentTree, userInput)
-                    prediction = result
-                    predictionPath = path
-                },
-                modifier = Modifier.fillMaxWidth()
+                onClick = { filePicker.launch("text/*") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0072BC)) //фон кнопачки
+
             ) {
-                //прикорльаня лупа
-                Text("🔍 Найти кафе")
+                Text("📂 Наэнвелоупить CSV")
             }
 
-            //предикт
-            if (prediction.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(12.dp))
+            //показываем сколько символов загружено по рофлу
+            if (csvText.isNotEmpty()) {
                 Text(
-                    text = "Рекомендуем: $prediction",
+                    //прикольная галочка
+                    text = "✓ Залито ${csvText.length} символов",
+                    fontSize = 13.sp,
+                    color = Color(0xFF1F2256)
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+
+            //осеменяем гхрута
+            Button(
+                onClick = {
+                    errorMessage = ""
+                    prediction = ""
+                    predictionPath = emptyList()
+
+                    //но но но
+                    if (csvText.isBlank()) {
+                        errorMessage = "Сначала загрузите CSV файл!"
+                        return@Button
+                    }
+
+                    //о великий парс работай CSV
+                    val rows = parseCsv(csvText)
+
+                    if (rows.isEmpty()) {
+                        errorMessage = "Ни шо не пойму("
+                        return@Button
+                    }
+
+                    //собираем список признаков из первой строки
+                    val attrs = rows.first().attrributes.keys.toList()
+                    attributes = attrs
+                    //собираем возможные значения каждого признака
+                    attributeValues = attrs.associateWith { attr ->
+                        rows.map { it.attrributes[attr] ?: "" }.distinct()
+                    }
+                    //Энвелоупинг грута
+                    tree = buildTree(rows, attrs)
+
+                    //ферст предикт
+                    userInput = attrs.associateWith { attr ->
+                        attributeValues[attr]?.firstOrNull() ?: ""
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0072BC))//фон кнопачки
+            ) {
+                Text("🌳 Слепить буратино")
+            }
+
+            //🚜если шота не так
+            if (errorMessage.isNotEmpty()) {
+                Text(
+                    text = errorMessage,
+                    color = androidx.compose.ui.graphics.Color.Red,
+                    fontSize = 14.sp
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            //холый хрут
+            tree?.let { currentTree ->
+                Text(
+                    text = "Структура дерева:",
                     fontSize = 18.sp,
                     fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                    color = androidx.compose.ui.graphics.Color(0xFF1B5E20)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Путь по дереву:",
-                    fontSize = 14.sp,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
+                    color = androidx.compose.ui.graphics.Color.Black
                 )
 
-                //каждый шаг пути
-                predictionPath.forEach { step ->
+                Spacer(modifier = Modifier.height(8.dp))
+                //та самая функция шо дерево в список строк бацает и показываем каждую строку
+                treeToLines(currentTree).forEach { line ->
                     Text(
-                        text = "→ $step",
-                        fontSize = 13.sp,
-                        color = androidx.compose.ui.graphics.Color.Gray
+                        text = line,
+                        fontSize = 14.sp,
+                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                        color = androidx.compose.ui.graphics.Color.Black,
+                        modifier = Modifier.align(Alignment.Start)
                     )
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+                //блок предикта
+                Text(
+                    text = "Получить рекомендацию:",
+                    fontSize = 18.sp,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    color = androidx.compose.ui.graphics.Color.Black
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                //кнопачки выбора ля каждоого признака
+                attributes.forEach { attr ->
+                    Text(
+                        text = attr,
+                        fontSize = 14.sp,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
+                        color = androidx.compose.ui.graphics.Color.Black
+                    )
+                    androidx.compose.foundation.layout.FlowRow {
+                        attributeValues[attr]?.forEach { value ->
+                            val isSelected = userInput[attr] == value
+                            Button(
+                                onClick = {
+                                    userInput = userInput.toMutableMap()
+                                        .apply { put(attr, value) }
+                                },
+                                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                    containerColor = if (isSelected)
+                                        androidx.compose.ui.graphics.Color(0xFF1565C0)
+                                    else
+                                        androidx.compose.ui.graphics.Color(0xFF90CAF9)
+                                ),
+                                modifier = Modifier.padding(2.dp)
+                            ) {
+                                Text(value, fontSize = 12.sp)
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+
+                //кнпка предикта
+                Button(
+                    onClick = {
+                        val (result, path) = predict(currentTree, userInput)
+                        prediction = result
+                        predictionPath = path
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    //прикорльаня лупа
+                    Text("🔍 Найти кафе")
+                }
+
+                //предикт
+                if (prediction.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "Рекомендуем: $prediction",
+                        fontSize = 18.sp,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                        color = androidx.compose.ui.graphics.Color(0xFF1B5E20)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Путь по дереву:",
+                        fontSize = 14.sp,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
+                        color = androidx.compose.ui.graphics.Color.Black
+                    )
+
+                    //каждый шаг пути
+                    predictionPath.forEach { step ->
+                        Text(
+                            text = " → $step",
+                            fontSize = 13.sp,
+                            color = androidx.compose.ui.graphics.Color.Black
+                        )
+                    }
                 }
             }
         }
