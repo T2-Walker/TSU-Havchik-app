@@ -19,6 +19,10 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Overlay
 import java.io.File
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 
 //название и координаты мест
@@ -51,11 +55,11 @@ val cafes = listOf(
 
 //цвета для каждого кластера (максимум 5 кластеров)
 val clusterColors = listOf(
-    android.graphics.Color.RED,
-    android.graphics.Color.BLUE,
-    android.graphics.Color.GREEN,
-    android.graphics.Color.MAGENTA,
-    android.graphics.Color.CYAN
+    android.graphics.Color.rgb(255, 0, 0), //красный
+    android.graphics.Color.rgb(0, 0, 255), // синий
+    android.graphics.Color.rgb(255, 255, 0), // желтый
+    android.graphics.Color.rgb(255, 0, 255), // розовый
+    android.graphics.Color.rgb(0, 255, 50) // зеленый
     //🚜КАТЯ ТУТ МОЖНА НАСТРОИТЬ ЦВЕТА КЛАСТЕРОВ
 )
 
@@ -170,8 +174,8 @@ class CafeOverlay(
                     point.y.toFloat(),
                     20f,//🚜радиус точки кафе
                     cafePaint
-                    )
-                }
+                )
+            }
             //чертим две линии и получаем крестик тобишь центер нашего кластера
             val center = projection.toPixels(
                 GeoPoint(cluster.centerLat, cluster.centerLon), null
@@ -187,9 +191,9 @@ class CafeOverlay(
                 centerPaint
             )
             //🚜 20f в drawLine — половина длины крестика
-            }
         }
     }
+}
 
 
 @Composable//говорим шо мы делаем ЮАЙ
@@ -247,7 +251,8 @@ fun ClusterScreen(modifier: Modifier = Modifier) {
         Column(//🚜 второй колум уже панель управления снизу
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),//🚜отступпы СО ВСЕХ сторон
+
+                .padding(10.dp), //🚜отступпы СО ВСЕХ сторон
             horizontalAlignment = Alignment.CenterHorizontally//🚜центрируем по горизонатли
         ) {
             Text(
@@ -259,7 +264,12 @@ fun ClusterScreen(modifier: Modifier = Modifier) {
                 onValueChange = { k = it.toInt() },//лямбдус вызывается при движении it - новое значение флота конвертируме уже в интус
                 valueRange = 2f..5f,//ренджа кластеров
                 steps = 2,//премежуток шагов
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = SliderDefaults.colors(
+                    thumbColor = Color(0xFF0072BC),        // цвет ползунка
+                    activeTrackColor = Color(0xFF0072BC),  // цвет активной дорожки
+                    inactiveTrackColor = Color(0xFFC7EAFF) // цвет неактивной дорожки
+                )
             )
 
             Spacer(modifier = Modifier.height(8.dp))//ратсояние между слайдеров и кнопкой

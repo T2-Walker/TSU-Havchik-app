@@ -40,6 +40,8 @@ import org.osmdroid.views.MapView
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteDefaults
+import androidx.compose.ui.graphics.Color
 class MainActivity : ComponentActivity() {
     private var matrix by mutableStateOf<Array<IntArray>?>(null)    //сначала создаем null матрицу, далее заполним ее из csv файла
 
@@ -87,7 +89,11 @@ fun TSUmapappApp(
                     onClick = { currentDestination = it }
                 )
             }
-        }
+        },
+        navigationSuiteColors = NavigationSuiteDefaults.colors(
+            navigationBarContainerColor = Color(0xFF0072BC)
+        )
+
     ) {     /* сам экран */
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             Box(modifier = Modifier.fillMaxSize()) { /* Box это вариант группировки контента в котором штуки в нем накладываются друг на друга */

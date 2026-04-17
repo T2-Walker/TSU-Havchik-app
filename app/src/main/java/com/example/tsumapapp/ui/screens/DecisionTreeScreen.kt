@@ -7,6 +7,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.platform.LocalContext
@@ -275,24 +278,40 @@ fun DecisionTreeScreen(modifier: Modifier = Modifier) {
             stream?.close()
         }
     }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(0.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF0072BC))
+    ) {
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
+            .background(
+                Color(0xFFE0F5FF),//фон в ихдрасиыль
+                shape = RoundedCornerShape(24.dp)
+            )
     ) {
         //загоооловок
+
         Text(
-            text = "Я есть Гхрут",
+            text = "                    Я есть Гхрут",//мега отступ типо чтоб посередине было
             fontSize = 22.sp,
-            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+            fontWeight = FontWeight.ExtraBold,
+            color = Color(0xFF0072BC),//цвет текста
+
         )
         Spacer(modifier = Modifier.height(12.dp))
 
         //кнопачка загрузки CSV
         Button(
             onClick = { filePicker.launch("text/*") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0072BC)) //фон кнопачки
+
         ) {
             Text("📂 Наэнвелоупить CSV")
         }
@@ -303,7 +322,7 @@ fun DecisionTreeScreen(modifier: Modifier = Modifier) {
                 //прикольная галочка
                 text = "✓ Залито ${csvText.length} символов",
                 fontSize = 13.sp,
-                color = androidx.compose.ui.graphics.Color.Gray
+                color = Color(0xFF1F2256)
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
@@ -344,11 +363,14 @@ fun DecisionTreeScreen(modifier: Modifier = Modifier) {
                     attributeValues[attr]?.firstOrNull() ?: ""
                 }
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0072BC))//фон кнопачки
         ) {
             Text("🌳 Слепить буратино")
         }
-
+    }
         //🚜если шота не так
         if (errorMessage.isNotEmpty()) {
             Text(
