@@ -23,6 +23,8 @@ import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.font.FontWeight
+import org.osmdroid.views.overlay.Marker
 
 
 //название и координаты мест
@@ -204,7 +206,7 @@ class CafeOverlay(
 
 @Composable//говорим шо мы делаем ЮАЙ
 //🚜 КАТЯ - Юай
-fun ClusterScreen(modifier: Modifier = Modifier) {
+fun ClusterScreen(modifier: Modifier = Modifier, mapViewRef: MutableState<MapView?>,) {
     var k by remember { mutableStateOf(3) }//ремеберус запоминает значение между перерисовками Compose
     //когда меняется значение — Compose перерисовывает экран
     //by - делегирование, позволяет писать просто k вместо k.value
@@ -212,58 +214,50 @@ fun ClusterScreen(modifier: Modifier = Modifier) {
     //Три наши состояния - текущие кластеры, ссылка на overlay, ссылка на карту
     var clusters by remember { mutableStateOf(listOf<Cluster>()) }
     var cafeOverlay by remember { mutableStateOf<CafeOverlay?>(null) }//<CafeOverlay?> — ? значит может быть null пока карта не создана — null
-    var mapView by remember { mutableStateOf<MapView?>(null) }
+    /*var mapView by remember { mutableStateOf<MapView?>(null) }*/
+    val map = mapViewRef.value!!
 
     //🚜Column — располагает дочерние элементы вертикально сверху вниз
-    Column(modifier = modifier.fillMaxSize()) {
-        AndroidView(
-            factory = { context ->//вызывается один раз при создании создаёт и возвращает MapView
-                val config = Configuration.getInstance()
-                config.load(
-                    context,
-                    context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE)
-                )
-                config.osmdroidBasePath = context.filesDir
-                config.osmdroidTileCache = File(context.filesDir, "osmdroid_tiles")
-
-                MapView(context).apply {
-                    setUseDataConnection(true)
-                    setTileSource(
-                        org.osmdroid.tileprovider.tilesource.TileSourceFactory
-                            .DEFAULT_TILE_SOURCE
-                    )
-                    controller.setZoom(15.5)
-                    controller.setCenter(GeoPoint(56.4685, 84.9480))
-                    //начальный зумус и центр карты кластеризации
-
-                    setMultiTouchControls(true)
-
-                    val bounds = BoundingBox(
-                        56.480, 84.960,
-                        56.455, 84.935
-                    )
-                    setScrollableAreaLimitDouble(bounds)
-                    minZoomLevel = 14.0
-                    maxZoomLevel = 19.0
-                    val overlay = CafeOverlay(clusters)
-                    overlays.add(overlay)
-                    cafeOverlay = overlay
-                    mapView = this
-                    //🚜 создаём overlay, добавляем к карте, сохраняем ссылки в состояние Compose
-                }
-            },
-            modifier = Modifier.weight(1f)//занимает всё свободное место в Column кроме панели снизу
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFF0072BC))
+            .padding(bottom = 14.dp)
+            .padding(top = 30.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "ТОМСКИЙ ГОСУДАРСТВЕННЫЙ УНИВЕРСИТЕТ",
+            fontSize = 14.sp,
+            color = Color.White,
+            fontWeight = FontWeight.Bold
         )
+        Text(
+            text = "Карта кампуса",
+            fontSize = 12.sp,
+            color = Color.White
+        )
+    }
+    Column(modifier = modifier.fillMaxSize()) {
+        val overlay = CafeOverlay(clusters)
+        map.overlays.add(overlay)
+        map.invalidate()
+        cafeOverlay = overlay
+
+        //костыль чтобы column с панелью управления уехал в самый низ, weight распределяет элементы по весу, но т.к. вес задаем только Spacer, он считается самым "тяжелым" и занимает все простроанство
+        Spacer(modifier = Modifier.weight(1f))
+
         Column(//🚜 второй колум уже панель управления снизу
             modifier = Modifier
                 .fillMaxWidth()
-
+                .background(color = Color(0xFFE0F5FF))
                 .padding(10.dp), //🚜отступпы СО ВСЕХ сторон
             horizontalAlignment = Alignment.CenterHorizontally//🚜центрируем по горизонатли
         ) {
             Text(
                 text = "Количество клистерочков: $k",
-                fontSize = 16.sp//🚜размерус шрифта
+                fontSize = 16.sp,//🚜размерус шрифта
+                color = androidx.compose.ui.graphics.Color.Black
             )
             Slider(//🚜ползунок
                 value = k.toFloat(),
@@ -285,7 +279,7 @@ fun ClusterScreen(modifier: Modifier = Modifier) {
                 onClick = {
                     val result =
                         kMeans(cafes, k)//запускаем нашу мега логику и поулчаем список призывников
-                    mapView?.let { map ->
+                    map?.let { map ->
                         cafeOverlay?.updateClusters(
                             result,
                             map
@@ -295,6 +289,14 @@ fun ClusterScreen(modifier: Modifier = Modifier) {
             ) {
                 Text("Энвелоупнуть")
             }
+        }
+    }
+
+    DisposableEffect(Unit) {    //выключаем мектки на карте при переключении экрана
+        onDispose {
+            val cafeOverlays = map.overlays.filterIsInstance<CafeOverlay>()
+            map.overlays.removeAll(cafeOverlays)
+            map.invalidate()
         }
     }
 }

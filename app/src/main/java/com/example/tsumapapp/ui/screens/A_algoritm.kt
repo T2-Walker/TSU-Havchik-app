@@ -358,7 +358,7 @@ object Azvezdochka_algoritm {
                     "%3d ",
                     col
                 )
-            )   //формат в котором число впихивается в строку шириной в 3 символа
+            )   //формат в котором число впихивается в строку шириной в 3 символа это чтобы цифры на превью не съезжали
         }
         println()
 
@@ -534,6 +534,8 @@ fun AzvezdochkaScreen(
         onDispose {
             Azvezdochka_algoritm.disableMarkers(mapViewRef)
             Azvezdochka_algoritm.removeLines(mapViewRef)
+            Azvezdochka_algoritm.clearAllMarkers(mapViewRef)
+            markers = emptyList()
         }
     }
 
@@ -556,7 +558,8 @@ fun AzvezdochkaScreen(
         modifier = Modifier
             .fillMaxWidth()
             .background(Color(0xFF0072BC))
-            .padding(vertical = 30.dp),
+            .padding(bottom = 14.dp)
+            .padding(top = 30.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
@@ -566,7 +569,7 @@ fun AzvezdochkaScreen(
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = "Карта студенческих кафе",
+            text = "Карта кампуса",
             fontSize = 12.sp,
             color = Color.White
         )

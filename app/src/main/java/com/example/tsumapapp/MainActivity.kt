@@ -123,7 +123,7 @@ fun TSUmapappApp(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(
-                            top = 120.dp,
+                            top = 102.dp,
                             end = 14.dp
                         )
                 ) {
@@ -145,7 +145,8 @@ fun TSUmapappApp(
                     )
 
                     AppDestinations.CLUSTER -> ClusterScreen(
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding),
+                        mapViewRef
                     )
 
                     AppDestinations.DECISION_TREE -> DecisionTreeScreen(
