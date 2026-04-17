@@ -122,25 +122,48 @@ object Azvezdochka_algoritm {
         println("findPath called")
         println("start: ($startRow, $startCol), end: ($endRow, $endCol)")
 
+        var curStartRow = startRow
+        var curStartCol = startCol
+        var curEndRow = endRow
+        var curEndCol = endCol
+
         var i = 0
-        if (matrix[startRow][startCol] == 0 || matrix[endRow][endCol] == 0) {    // Проверка валидности старта и цели
-            println("Старт или конец =0 в матрице")
-            return@withContext null  // старт или цель на стене
+
+        // Проверка валидности старта и цели
+        if (matrix[startRow][startCol] == 0) {
+            println("Старт =0 в матрице, применяем BFS")
+            bfsFind1Cell(matrix, startRow, startCol)?.let { (newRow, newCol) ->
+                curStartRow = newRow
+                curStartCol = newCol
+            } ?: run {  //если bfs выдал null то ничего не присваиваем а запускаем функцию run в скобках
+                println("BFS не нашел ходибельных клеток в радиусе")
+                return@withContext null
+            }
+        }
+        if (matrix[endRow][endCol] == 0) {
+            println("Конец =0 в матрице, применяем BFS")
+            bfsFind1Cell(matrix, endRow, endCol)?.let { (newRow, newCol) ->
+                curEndRow = newRow
+                curEndCol = newCol
+            } ?: run {  //если bfs выдал null то ничего не присваиваем а запускаем функцию run в скобках
+                println("BFS не нашел ходибельных клеток в радиусе")
+                return@withContext null
+            }
         }
 
-        val rows = matrix.size
-        val cols = matrix[0].size
+        val rows = 385
+        val cols = 305
 
         val openSet = mutableSetOf<Node>()  // открытйц список - для узлов по которым еще не прошлись
         val closedSet = mutableSetOf<Node>()    // закрытый список - для узлов по которым прошли
 
-        val startNode = Node(startRow, startCol, g = 0.0)      // стартовый и целевой узлы, g - стоимость от старта до этого узла
-        startNode.h = heur(startRow, startCol, endRow, endCol)  //задаем эвристику - сколько осталось до цели
+        val startNode = Node(curStartRow, curStartCol, g = 0.0)      // стартовый и целевой узлы, g - стоимость от старта до этого узла
+        startNode.h = heur(curStartRow, curStartCol, curEndRow, curEndCol)  //задаем эвристику - сколько осталось до цели
         startNode.f = startNode.g + startNode.h //f - стоимость от старта до узла + стоимость от узла жо цели
         openSet.add(startNode)
 
         val nodeMap = mutableMapOf<Pair<Int, Int>, Node>()  // карта для быстрого доступа к узлам по координатам
-        nodeMap[startRow to startCol] = startNode       // мапа нужна чтобы не проходить по одному и тому же узлу по нескольку раз
+        nodeMap[curStartRow to curStartCol] = startNode       // мапа нужна чтобы не проходить по одному и тому же узлу по нескольку раз
 
         while (openSet.isNotEmpty()) {  // пока у нас есть узлы по которым не прошлись
             i++
@@ -156,7 +179,7 @@ object Azvezdochka_algoritm {
             openSet.remove(current)
             closedSet.add(current)  // текущий узел переносим в закрытый список
 
-            if (current.row == endRow && current.col == endCol) {   // если текущий узел это цель - возвращаем путь, цикл закроется на следующей итерации
+            if (current.row == curEndRow && current.col == curEndCol) {   // если текущий узел это цель - возвращаем путь, цикл закроется на следующей итерации
                 println("Нашелся целевой узел")
                 return@withContext reconstructPath(current)
             }
@@ -181,7 +204,7 @@ object Azvezdochka_algoritm {
                 if (gDir < neighbor.g || !openSet.contains(neighbor)) { //если g соседа больше - значит мы нашли более короткий путь до старта,
                     neighbor.parent = current     // если соседа нет в открытом списке или его g был больше - заполняем его данные
                     neighbor.g = gDir
-                    neighbor.h = heur(neighbor.row, neighbor.col, endRow, endCol)
+                    neighbor.h = heur(neighbor.row, neighbor.col, curEndRow, curEndCol)
                     neighbor.f = neighbor.g + neighbor.h
 
                     if (!openSet.contains(neighbor)) {  //добавляем соседа в открытый список
@@ -241,8 +264,8 @@ object Azvezdochka_algoritm {
 
     /////////////////////////ДЕБАГ)))//////////////////////////
     fun printKusokMatrix(matrix: Array<IntArray>, row: Int, col: Int, size: Int = 20) {
-        val rows = matrix.size
-        val cols = matrix[0].size
+        val rows = 385
+        val cols = 305
 
         val half = size / 2
         var startRow = row - half
@@ -294,6 +317,45 @@ object Azvezdochka_algoritm {
         }
     }
     /////////////////////////////////////////////
+
+    fun bfsFind1Cell(matrix: Array<IntArray>, startRow: Int, startCol: Int, radius: Int = 20): Pair<Int, Int>? {  //поиск в ширину ближайшей проходимой клетко
+        println("Запускаем BFS из точки ($startRow, $startCol)")
+
+        val rows = 385
+        val cols = 305
+
+        val queue = ArrayDeque<Pair<Int, Int>>()    //  deque - двусторонняя очередь оптимизированная для добавления и удаления элементов в начале и конце списка
+        val visited = mutableSetOf<Pair<Int, Int>>()    //list медленный и обычный set нельзя изменить поэтому делаем странный mutableSet
+
+        queue.add(Pair(startRow, startCol))
+        visited.add(Pair(startRow, startCol))
+
+        while (queue.isNotEmpty()) {
+            val (row, col) = queue.removeFirst()    // убирает и возвращает первый элемент
+
+            if (abs(row - startRow) > radius || abs(col - startCol) > radius) continue
+
+            if (matrix[row][col] == 1) {
+                println("Найдена ближайшая ходибельная клетка клетка: ($row, $col)")
+                return Pair(row, col)
+            }
+
+            for ((dr, dc) in directions) {
+                val newRow = row + dr
+                val newCol = col + dc
+
+                if (newRow in 0 until rows && newCol in 0 until cols) { // проверка на границы матрциы
+                    val cell = Pair(newRow, newCol)
+                    if (cell !in visited) {
+                        queue.add(cell)
+                        visited.add(cell)
+                    }
+                }
+            }
+        }
+
+        return null  // в ближайшем радиусе ходибельных клеток нет
+    }
 }
 
 @Composable
