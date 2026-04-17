@@ -263,7 +263,8 @@ fun ClusterScreen(modifier: Modifier = Modifier) {
         ) {
             Text(
                 text = "Количество клистерочков: $k",
-                fontSize = 16.sp//🚜размерус шрифта
+                fontSize = 16.sp,//🚜размерус шрифта
+                color = androidx.compose.ui.graphics.Color.Black
             )
             Slider(//🚜ползунок
                 value = k.toFloat(),

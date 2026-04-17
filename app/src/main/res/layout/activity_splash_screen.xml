@@ -19,6 +19,22 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintVertical_bias="0.996" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="315dp"
+        android:layout_height="169dp"
+        android:gravity="center"
+        android:text="TSU HAVCHIK APP"
+        android:fontFamily="sans-serif-black"
+        android:textSize="50sp"
+        android:textStyle="bold"
+        android:textColor="@color/tsu_blue"
+        app:layout_constraintBottom_toBottomOf="@+id/SplashScreenImage"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.613" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

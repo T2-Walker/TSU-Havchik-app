@@ -5,8 +5,8 @@ enum class AppDestinations(
     val label: String,
     val icon: Int,
 ) {
-    A("A*", R.drawable.az),
-    CLUSTER("Cluster", R.drawable.cluster),
+    A("АСтаръ", R.drawable.az),
+    CLUSTER("Колян", R.drawable.cluster),
     DECISION_TREE("Ихдрасиыль", R.drawable.tree),
     NEURAL("ДипСакер", R.drawable.dipsik),
 }
