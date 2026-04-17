@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.window.embedding.EmbeddingBounds
 import com.example.tsumapapp.ui.theme.TSUmapappTheme
 
+
 import com.example.tsumapapp.ui.screens.AzvezdochkaScreen
 import com.example.tsumapapp.ui.screens.OSMDMap
 import com.example.tsumapapp.ui.screens.ClusterScreen
@@ -34,6 +35,7 @@ import com.example.tsumapapp.ui.screens.DecisionTreeScreen
 import com.example.tsumapapp.ui.screens.GridOverlay
 import com.example.tsumapapp.enveloup.geoPointToMatrix
 import com.example.tsumapapp.enveloup.Matrix
+import com.example.tsumapapp.ui.screens.NeuralNetworkScreen
 import org.osmdroid.views.MapView
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
@@ -129,6 +131,9 @@ fun TSUmapappApp(
                     )
 
                     AppDestinations.DECISION_TREE -> DecisionTreeScreen(
+                        modifier = Modifier.padding(innerPadding)
+                    )
+                    AppDestinations.NEURAL -> NeuralNetworkScreen(
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
