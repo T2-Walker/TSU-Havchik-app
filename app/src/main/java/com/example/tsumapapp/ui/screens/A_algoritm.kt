@@ -35,6 +35,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
+import java.util.PriorityQueue
 
 object Azvezdochka_algoritm {
     private var isInitialized = false
@@ -115,7 +116,11 @@ object Azvezdochka_algoritm {
     )
 
     private fun heur(row1: Int, col1: Int, row2: Int, col2: Int): Double {  //эвристика - диагональное расстояние
-        return (abs(row1 - row2) + abs(col1 - col2)).toDouble()
+        val h = (abs(row1 - row2) + abs(col1 - col2)).toDouble()
+        if (h in 0.0..0.9 && (row1 != row2 || col1 != col2)) {
+            println("!!!!!!!!!!!!!!!!!!!!!!!! эвритсика = 0 на разных клетках !!!!!!!!!!!!!!!!!!!!!!!!!")
+        }
+        return h
     }
 
     suspend fun findPath(matrix: Array<IntArray>, startRow: Int, startCol: Int, endRow: Int, endCol: Int): List<Pair<Int, Int>>? = withContext(Dispatchers.Default) {  //функция поиска пути
@@ -154,13 +159,13 @@ object Azvezdochka_algoritm {
         val rows = 385
         val cols = 305
 
-        val openSet = mutableSetOf<Node>()  // открытйц список - для узлов по которым еще не прошлись
+        val openSet = PriorityQueue(compareBy<Node> { it.f })  // PriorityQueueue список с автоматической сортировкой
         val closedSet = mutableSetOf<Node>()    // закрытый список - для узлов по которым прошли
 
         val startNode = Node(curStartRow, curStartCol, g = 0.0)      // стартовый и целевой узлы, g - стоимость от старта до этого узла
         startNode.h = heur(curStartRow, curStartCol, curEndRow, curEndCol)  //задаем эвристику - сколько осталось до цели
         startNode.f = startNode.g + startNode.h //f - стоимость от старта до узла + стоимость от узла жо цели
-        openSet.add(startNode)
+        openSet.offer(startNode)
 
         val nodeMap = mutableMapOf<Pair<Int, Int>, Node>()  // карта для быстрого доступа к узлам по координатам
         nodeMap[curStartRow to curStartCol] = startNode       // мапа нужна чтобы не проходить по одному и тому же узлу по нескольку раз
@@ -175,8 +180,8 @@ object Azvezdochka_algoritm {
                 return@withContext null
             }
 
-            val current = openSet.minByOrNull { it.f } ?: break // minByOrNull находит элемент с самым маленьким значением f, ломаем цикл если ссписок пуст
-            openSet.remove(current)
+            val current = openSet.poll() ?: break // poll в PrioQ берет элемент по компаратору прописанному в объявлении openSet (с минимальным f) а затем удаляет его из очереди
+            if (closedSet.contains(current)) continue
             closedSet.add(current)  // текущий узел переносим в закрытый список
 
             if (current.row == curEndRow && current.col == curEndCol) {   // если текущий узел это цель - возвращаем путь, цикл закроется на следующей итерации
