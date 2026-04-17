@@ -33,16 +33,30 @@ import com.example.tsumapapp.ui.screens.OSMDMap
 import com.example.tsumapapp.ui.screens.ClusterScreen
 import com.example.tsumapapp.ui.screens.DecisionTreeScreen
 import com.example.tsumapapp.ui.screens.GridOverlay
+import com.example.tsumapapp.enveloup.geoPointToMatrix
+import com.example.tsumapapp.enveloup.Matrix
 import com.example.tsumapapp.ui.screens.NeuralNetworkScreen
 import org.osmdroid.views.MapView
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+    private var matrix by mutableStateOf<Array<IntArray>?>(null)    //сначала создаем null матрицу, далее заполним ее из csv файла
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        lifecycleScope.launch {
+            val loadedmatrix = Matrix.load(this@MainActivity, R.raw.matrix4)    //еще одна перемернная потому что без нее все ломается
+            matrix = loadedmatrix
+            if (loadedmatrix != null) {
+                println("Матрица загружена: ${matrix!!.size} x ${matrix!![0].size}")
+            }
+        }
+
         setContent {
             TSUmapappTheme {
-                TSUmapappApp()
+                TSUmapappApp(matrix = matrix)
             }
         }
     }
@@ -50,7 +64,9 @@ class MainActivity : ComponentActivity() {
 
 @PreviewScreenSizes /* аннотация для того чтобы функция работала на разных размерах экрана (вроде бы) */
 @Composable /* аннотация для того чтобы функция могла создать интерфейс (компилятор перерисовает интерфейс при изменении этой функции */
-fun TSUmapappApp() {
+fun TSUmapappApp(
+    matrix: Array<IntArray>? = null
+) {
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.A) } /* текущая страница - после by запоминание страницы даже после поворота экрана */
     val mapViewRef = remember {mutableStateOf<MapView?>(null)} //val чтобы не менялся сам объект на который она указывает, но свойство объекта менять при этом можно, сама переменная - наша карт
     var gridVisible by remember { mutableStateOf(true) } //by нужен чтобы тип был boolean а не mutable
@@ -96,7 +112,7 @@ fun TSUmapappApp() {
                 ) {
                     Icon(
                         painter = painterResource(
-                            if (gridVisible) R.drawable.ic_favorite
+                            if (gridVisible) R.drawable.ic_favorite //🚜 надо иконку для сетки - первая иконка если сетка видна, вторая если не видна
                             else R.drawable.ic_favorite
                         ),
                         contentDescription = null
@@ -105,7 +121,9 @@ fun TSUmapappApp() {
 
                 when (currentDestination) { /* переключение между экранами */
                     AppDestinations.A -> AzvezdochkaScreen(
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding,),
+                        mapViewRef,
+                        matrix
                     )
 
                     AppDestinations.CLUSTER -> ClusterScreen(
