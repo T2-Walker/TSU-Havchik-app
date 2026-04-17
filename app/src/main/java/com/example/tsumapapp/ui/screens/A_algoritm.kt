@@ -112,14 +112,10 @@ object Azvezdochka_algoritm {
         1 to 0,    // вниз
         0 to -1,   // влево
         0 to 1,    // вправо
-        -1 to -1,  // вверх-влево
-        -1 to 1,   // вверх-вправо
-        1 to -1,   // вниз-влево
-        1 to 1     // вниз-вправо
     )
 
     private fun heur(row1: Int, col1: Int, row2: Int, col2: Int): Double {  //эвристика - диагональное расстояние
-        return max(abs(row1 - row2), abs(col1 - col2)).toDouble()
+        return (abs(row1 - row2) + abs(col1 - col2)).toDouble()
     }
 
     suspend fun findPath(matrix: Array<IntArray>, startRow: Int, startCol: Int, endRow: Int, endCol: Int): List<Pair<Int, Int>>? = withContext(Dispatchers.Default) {  //функция поиска пути
@@ -144,12 +140,16 @@ object Azvezdochka_algoritm {
         openSet.add(startNode)
 
         val nodeMap = mutableMapOf<Pair<Int, Int>, Node>()  // карта для быстрого доступа к узлам по координатам
-        nodeMap[startRow to startCol] = startNode
+        nodeMap[startRow to startCol] = startNode       // мапа нужна чтобы не проходить по одному и тому же узлу по нескольку раз
 
         while (openSet.isNotEmpty()) {  // пока у нас есть узлы по которым не прошлись
             i++
             if (i % 1000 == 0) {
                 println("findPath итерация $i, размер openSet: ${openSet.size}, размер closedSet: ${closedSet.size}")
+            }
+            if (i == 200000) {
+                println("Слишком много итераций, отмена алгоритма")
+                return@withContext null
             }
 
             val current = openSet.minByOrNull { it.f } ?: break // minByOrNull находит элемент с самым маленьким значением f, ломаем цикл если ссписок пуст
@@ -170,11 +170,11 @@ object Azvezdochka_algoritm {
 
                 val neighbor = nodeMap.getOrPut(newRow to newCol) { // getorput получает значение по ключу или создает новое - узел по координатам матрицы
                     Node(newRow, newCol)                       // он здесь нужен чтобы не добавлять один и тот же узел в мапу по нескольку раз
-                }                                    //а вообще здесь мы ищем соседний узел и мапа нужна чтобы не проходить по одному и тому же узлу по нескольку раз
+                }                                    //а вообще здесь мы ищем соседний узел
 
                 if (closedSet.contains(neighbor)) continue  //если сосед в закрытом списке, то есть мы уже проходились по нему - скип
 
-                val stepCost = if (dr != 0 && dc != 0) 1.414 else 1.0   //стоимость шага - 1 по прямой и √2 для диагонали
+                val stepCost = 1.0   //стоимость шага - 1 по прямой и √2 для диагонали
                 val gDir = current.g + stepCost   //стоимость хода по текущему направлению
 
                 //обновляем данные узла соседа
@@ -239,7 +239,7 @@ object Azvezdochka_algoritm {
         isInitialized = false
     }
 
-    ///////////////////////////////////////////////////////
+    /////////////////////////ДЕБАГ)))//////////////////////////
     fun printKusokMatrix(matrix: Array<IntArray>, row: Int, col: Int, size: Int = 20) {
         val rows = matrix.size
         val cols = matrix[0].size
@@ -269,7 +269,7 @@ object Azvezdochka_algoritm {
 
         print("     ")
         for (col in startCol..endCol) {
-            print(String.format("%3d ", col))
+            print(String.format("%3d ", col))   //формат в котором число впихивается в строку шириной в 3 символа
         }
         println()
 
