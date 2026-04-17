@@ -534,6 +534,8 @@ fun AzvezdochkaScreen(
         onDispose {
             Azvezdochka_algoritm.disableMarkers(mapViewRef)
             Azvezdochka_algoritm.removeLines(mapViewRef)
+            Azvezdochka_algoritm.clearAllMarkers(mapViewRef)
+            markers = emptyList()
         }
     }
 

@@ -5,12 +5,17 @@ import androidx.compose.ui.Modifier
 import kotlin.math.exp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -308,7 +313,7 @@ class neuralNetwork {
 
 @Composable
 fun NeuralNetworkScreen(modifier: Modifier = Modifier) {
-
+    var isLoading by remember { mutableStateOf(false) }
     //сеетка 5x5 — true = черный пиксель, false = белый
     var pixels by remember {
         mutableStateOf(Array(5) { BooleanArray(5) { false } })
@@ -322,201 +327,239 @@ fun NeuralNetworkScreen(modifier: Modifier = Modifier) {
     //обучена ли сеть
     var isTrained by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(0.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF0072BC))
     ) {
-        //заголовок
-        Text(
-            text = "Дьякую",
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "Бахни цифру от 0 до 9",
-            fontSize = 14.sp,
-            color = Color.Gray
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        //кнопка обучения
-        Button(
-            onClick = {
-                statusMessage = "Обучаю сеть..."
-                val net = neuralNetwork()
-                net.fit(trainingData, epochs = 5000)
-                neuralNet = net
-                isTrained = true
-                statusMessage = "Сеть обучена! теперь рисуй цифру ✓"
-            },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (isTrained) Color(0xFF388E3C) else Color(0xFF1565C0)
-            ),
-            modifier = Modifier.fillMaxWidth()
+        Column( //задник для экрана нейронки
+            modifier = modifier
+                .fillMaxSize()
+                .padding(16.dp)
+                .background(
+                    Color(0xFFE0F5FF),
+                    shape = RoundedCornerShape(24.dp)
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(if (isTrained) "✓ Сеть обучена" else "Обучить нейросеть")
-        }
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                //заголовок
+                Text(
+                    text = "Дьякую",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = androidx.compose.ui.graphics.Color.Black
+                )
 
-        Text(
-            text = statusMessage,
-            fontSize = 13.sp,
-            color = Color.Gray
-        )
+                Spacer(modifier = Modifier.height(8.dp))
 
-        Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    text = "Бахни цифру от 0 до 9",
+                    fontSize = 14.sp,
+                    color = androidx.compose.ui.graphics.Color.Black
+                )
 
-        //сетка 5x5
-        Text(
-            text = "Нарисуй цифру:",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium
-        )
+                Spacer(modifier = Modifier.height(16.dp))
 
-        Spacer(modifier = Modifier.height(8.dp))
+                //кнопка обучения
+                Button(
+                    onClick = {
+                        statusMessage = "Обучаю сеть..."
+                        isLoading = true
+                        val net = neuralNetwork()
+                        net.fit(trainingData, epochs = 5000)
+                        neuralNet = net
+                        isTrained = true
+                        isLoading = false
+                        statusMessage = "Сеть обучена! теперь рисуй цифру ✓"
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isTrained) Color(0xFF388E3C) else Color(0xFF1565C0)
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(if (isTrained) "✓ Сеть обучена" else "Обучить нейросеть")
+                }
 
-        //размер одной клетки
-        val cellSize = 56.dp
-        val cellSizePx = with(LocalDensity.current) { cellSize.toPx() }
+                Text(
+                    text = statusMessage,
+                    fontSize = 13.sp,
+                    color = Color.Gray
+                )
 
-        //сетка рисуется через Box с pointerInput
-        Box(
-            modifier = Modifier
-                .size(cellSize * 5)
-                .border(2.dp, Color.Gray)
-                //detectTapGestures — ловим касания пальца
-                .pointerInput(Unit) {
-                    detectTapGestures { offset ->
-                        //определяем какую клетку нажали
-                        val col = (offset.x / cellSizePx).toInt().coerceIn(0, 4)
-                        val row = (offset.y / cellSizePx).toInt().coerceIn(0, 4)
+                Spacer(modifier = Modifier.height(24.dp))
 
-                        //переключаем пиксель
-                        val newPixels = Array(5) { r ->
-                            BooleanArray(5) { c -> pixels[r][c] }
+                //сетка 5x5
+                Text(
+                    text = "Нарисуй цифру:",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = androidx.compose.ui.graphics.Color.Black
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                //размер одной клетки
+                val cellSize = 56.dp
+                val cellSizePx = with(LocalDensity.current) { cellSize.toPx() }
+
+                //сетка рисуется через Box с pointerInput
+                Box(
+                    modifier = Modifier
+                        .size(cellSize * 5)
+                        .border(2.dp, Color.Gray)
+                        //detectTapGestures — ловим касания пальца
+                        .pointerInput(Unit) {
+                            detectTapGestures { offset ->
+                                //определяем какую клетку нажали
+                                val col = (offset.x / cellSizePx).toInt().coerceIn(0, 4)
+                                val row = (offset.y / cellSizePx).toInt().coerceIn(0, 4)
+
+                                //переключаем пиксель
+                                val newPixels = Array(5) { r ->
+                                    BooleanArray(5) { c -> pixels[r][c] }
+                                }
+                                newPixels[row][col] = !newPixels[row][col]
+                                pixels = newPixels
+
+                                //сбрасываем результат при изменении рисунка
+                                recognizedDigit = null
+                            }
                         }
-                        newPixels[row][col] = !newPixels[row][col]
-                        pixels = newPixels
-
-                        //сбрасываем результат при изменении рисунка
-                        recognizedDigit = null
+                ) {
+                    //рисуем каждую клетку
+                    for (row in 0 until 5) {
+                        for (col in 0 until 5) {
+                            Box(
+                                modifier = Modifier
+                                    .offset(
+                                        x = cellSize * col,
+                                        y = cellSize * row
+                                    )
+                                    .size(cellSize)
+                                    .background(
+                                        if (pixels[row][col]) Color.Black
+                                        else Color.White
+                                    )
+                                    .border(0.5.dp, Color.LightGray)
+                            )
+                        }
                     }
                 }
-        ) {
-            //рисуем каждую клетку
-            for (row in 0 until 5) {
-                for (col in 0 until 5) {
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                //кнопки управления
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    //кнопка очистки
+                    Button(
+                        onClick = {
+                            pixels = Array(5) { BooleanArray(5) { false } }
+                            recognizedDigit = null
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF757575)
+                        ),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Очистить")
+                    }
+
+                    //кнопка распознавания
+                    Button(
+                        onClick = {
+                            if (!isTrained) {
+                                statusMessage = "Сначала обучи сеть!"
+                                return@Button
+                            }
+
+                            //превращаем сетку пикселей в массив для нейросети
+                            val input = DoubleArray(25) { idx ->
+                                val row = idx / 5
+                                val col = idx % 5
+                                if (pixels[row][col]) 1.0 else 0.0
+                            }
+
+                            recognizedDigit = neuralNet?.predict(input)
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Распознать")
+                    }
+                }
+
+                //если индикатор isLoading активен - вызываем крутилкувертелку
+                if (isLoading) {
                     Box(
                         modifier = Modifier
-                            .offset(
-                                x = cellSize * col,
-                                y = cellSize * row
-                            )
-                            .size(cellSize)
-                            .background(
-                                if (pixels[row][col]) Color.Black
-                                else Color.White
-                            )
-                            .border(0.5.dp, Color.LightGray)
-                    )
+                            .fillMaxSize()
+                            .background(Color(0xFF363636).copy(alpha = 0.5f))//alpha - канал прозрачности
+                            .clickable(enabled = false) {},
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(64.dp),
+                            color = Color(0x88000000).copy(alpha = 0.5f)
+                        )
+                    }
                 }
-            }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-        //кнопки управления
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            //кнопка очистки
-            Button(
-                onClick = {
-                    pixels = Array(5) { BooleanArray(5) { false } }
-                    recognizedDigit = null
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF757575)
-                ),
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Очистить")
-            }
+                //резы
+                recognizedDigit?.let { digit ->
 
-            //кнопка распознавания
-            Button(
-                onClick = {
-                    if (!isTrained) {
-                        statusMessage = "Сначала обучи сеть!"
-                        return@Button
-                    }
-
-                    //превращаем сетку пикселей в массив для нейросети
-                    val input = DoubleArray(25) { idx ->
-                        val row = idx / 5
-                        val col = idx % 5
-                        if (pixels[row][col]) 1.0 else 0.0
-                    }
-
-                    recognizedDigit = neuralNet?.predict(input)
-                },
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Распознать")
-            }
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        //резы
-        recognizedDigit?.let { digit ->
-
-            Text(
-                text = "Распознана цифра:",
-                fontSize = 16.sp,
-                color = Color.Gray
-            )
-
-            Text(
-                text = digit.toString(),
-                fontSize = 72.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1565C0)
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Ваша оценка заведению:",
-                fontSize = 16.sp,
-                color = Color.Gray
-            )
-
-            //пказываем звездочки — от 0 до 9
-            //делим на 2 чтобы показать из 5 звеезд (округляем)
-            val stars = (digit / 2.0).let { Math.round(it).toInt() }
-            Row {
-                repeat(5) { index ->
                     Text(
-                        text = if (index < stars) "⭐" else "☆",
-                        fontSize = 32.sp
+                        text = "Распознана цифра:",
+                        fontSize = 16.sp,
+                        color = androidx.compose.ui.graphics.Color.Black
+                    )
+
+                    Text(
+                        text = digit.toString(),
+                        fontSize = 72.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1565C0)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Ваша оценка заведению:",
+                        fontSize = 16.sp,
+                        color = androidx.compose.ui.graphics.Color.Black
+                    )
+
+                    //пказываем звездочки — от 0 до 9
+                    //делим на 2 чтобы показать из 5 звеезд (округляем)
+                    val stars = (digit / 2.0).let { Math.round(it).toInt() }
+                    Row {
+                        repeat(5) { index ->
+                            Text(
+                                text = if (index < stars) "⭐" else "☆",
+                                fontSize = 32.sp,
+                                color = androidx.compose.ui.graphics.Color.DarkGray
+                            )
+                        }
+                    }
+
+                    Text(
+                        text = "$digit из 9",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF1B5E20)
                     )
                 }
             }
-
-            Text(
-                text = "$digit из 9",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color(0xFF1B5E20)
-            )
         }
-    }
+    }//
 }

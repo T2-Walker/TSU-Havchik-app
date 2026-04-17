@@ -5,7 +5,7 @@ enum class AppDestinations(
     val label: String,
     val icon: Int,
 ) {
-    A("АСтаръ", R.drawable.az),
+    A("АСтарус", R.drawable.az),
     CLUSTER("Колян", R.drawable.cluster),
     DECISION_TREE("Ихдрасиыль", R.drawable.tree),
     NEURAL("ДипСакер", R.drawable.dipsik),
