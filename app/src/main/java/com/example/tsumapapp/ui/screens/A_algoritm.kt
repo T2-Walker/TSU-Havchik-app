@@ -49,7 +49,10 @@ object Azvezdochka_algoritm {
     private var isInitialized = false
     private var currentOverlay: MapEventsOverlay? = null
 
-    fun enableMarkers(mapViewRef: MutableState<MapView?>, onMarkerAdded: (GeoPoint) -> Unit = {}) { // второй параметр: тип параметра -> возвращаемый тип = значение по умолчанию
+    fun enableMarkers(
+        mapViewRef: MutableState<MapView?>,
+        onMarkerAdded: (GeoPoint) -> Unit = {}
+    ) { // второй параметр: тип параметра -> возвращаемый тип = значение по умолчанию
         val map = mapViewRef.value ?: return
 
         if (isInitialized) return   //здесь проверка чтобы функция не запускалась много раз
@@ -57,7 +60,8 @@ object Azvezdochka_algoritm {
 
         if (currentOverlay != null && map.overlays.contains(currentOverlay)) return      // если оверлей уже есть, ничего не делаем
 
-        val receiver = object : MapEventsReceiver { //создаем листенер еще раз если до этого переключались между экранами и снова нажали на экран А*
+        val receiver = object :
+            MapEventsReceiver { //создаем листенер еще раз если до этого переключались между экранами и снова нажали на экран А*
             override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
                 println("singleTapConfirmedHelper called")
                 p?.let { geoPoint ->    //для каждого геопоинта от перехваченного нажатия на экран добавляем метку
@@ -66,10 +70,12 @@ object Azvezdochka_algoritm {
                 }
                 return true
             }
+
             override fun longPressHelper(p: GeoPoint?): Boolean = false
         }
 
-        val eventsOverlay = MapEventsOverlay(receiver)  //создаем оверлей для событий, он не накладывает ничего визуально, а нужен чтобы перехватывать события
+        val eventsOverlay =
+            MapEventsOverlay(receiver)  //создаем оверлей для событий, он не накладывает ничего визуально, а нужен чтобы перехватывать события
         currentOverlay = eventsOverlay
         map.overlays.add(eventsOverlay)
         map.invalidate()
@@ -93,11 +99,17 @@ object Azvezdochka_algoritm {
     }
 
 
-    fun addMarker(map: MapView, geoPoint: GeoPoint) {   //добавляем маркер на карту и накачиваем его свойствами
+    fun addMarker(
+        map: MapView,
+        geoPoint: GeoPoint
+    ) {   //добавляем маркер на карту и накачиваем его свойствами
         println("addMarker called, current overlays: ${map.overlays.size}")
         val context = map.context
         val marker = Marker(map)
-        val icon = ContextCompat.getDrawable(context, R.drawable.locate1)   //🚜 надо иконку для метки на мапе
+        val icon = ContextCompat.getDrawable(
+            context,
+            R.drawable.locate1
+        )   //🚜 надо иконку для метки на мапе
         marker.position = geoPoint
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
         marker.icon = icon
@@ -116,14 +128,20 @@ object Azvezdochka_algoritm {
         var parent: Node? = null           // для восстановления пути
     )
 
-    private val directions = arrayOf(   // нправления движения
+    private val directions = arrayOf(
+        // нправления движения
         -1 to 0,   // вверх     to создает кортеж пар
         1 to 0,    // вниз
         0 to -1,   // влево
         0 to 1,    // вправо
     )
 
-    private fun heur(row1: Int, col1: Int, row2: Int, col2: Int): Double {  //эвристика - диагональное расстояние
+    private fun heur(
+        row1: Int,
+        col1: Int,
+        row2: Int,
+        col2: Int
+    ): Double {  //эвристика - диагональное расстояние
         val h = (abs(row1 - row2) + abs(col1 - col2)).toDouble()
         if (h in 0.0..0.9 && (row1 != row2 || col1 != col2)) {
             println("!!!!!!!!!!!!!!!!!!!!!!!! эвритсика = 0 на разных клетках !!!!!!!!!!!!!!!!!!!!!!!!!")
@@ -131,7 +149,13 @@ object Azvezdochka_algoritm {
         return h
     }
 
-    suspend fun findPath(matrix: Array<IntArray>, startRow: Int, startCol: Int, endRow: Int, endCol: Int): List<Pair<Int, Int>>? = withContext(Dispatchers.Default) {  //функция поиска пути
+    suspend fun findPath(
+        matrix: Array<IntArray>,
+        startRow: Int,
+        startCol: Int,
+        endRow: Int,
+        endCol: Int
+    ): List<Pair<Int, Int>>? = withContext(Dispatchers.Default) {  //функция поиска пути
         println("findPath called")
         println("start: ($startRow, $startCol), end: ($endRow, $endCol)")
 
@@ -148,35 +172,50 @@ object Azvezdochka_algoritm {
             bfsFind1Cell(matrix, startRow, startCol)?.let { (newRow, newCol) ->
                 curStartRow = newRow
                 curStartCol = newCol
-            } ?: run {  //если bfs выдал null то ничего не присваиваем а запускаем функцию run в скобках
-                println("BFS не нашел ходибельных клеток в радиусе")
-                return@withContext null
             }
+                ?: run {  //если bfs выдал null то ничего не присваиваем а запускаем функцию run в скобках
+                    println("BFS не нашел ходибельных клеток в радиусе")
+                    return@withContext null
+                }
         }
         if (matrix[endRow][endCol] == 0) {
             println("Конец =0 в матрице, применяем BFS")
             bfsFind1Cell(matrix, endRow, endCol)?.let { (newRow, newCol) ->
                 curEndRow = newRow
                 curEndCol = newCol
-            } ?: run {  //если bfs выдал null то ничего не присваиваем а запускаем функцию run в скобках
-                println("BFS не нашел ходибельных клеток в радиусе")
-                return@withContext null
             }
+                ?: run {  //если bfs выдал null то ничего не присваиваем а запускаем функцию run в скобках
+                    println("BFS не нашел ходибельных клеток в радиусе")
+                    return@withContext null
+                }
         }
 
         val rows = 385
         val cols = 305
 
-        val openSet = PriorityQueue(compareBy<Node> { it.f })  // PriorityQueueue список с автоматической сортировкой
+        val openSet =
+            PriorityQueue(compareBy<Node> { it.f })  // PriorityQueueue список с автоматической сортировкой
         val closedSet = mutableSetOf<Node>()    // закрытый список - для узлов по которым прошли
 
-        val startNode = Node(curStartRow, curStartCol, g = 0.0)      // стартовый и целевой узлы, g - стоимость от старта до этого узла
-        startNode.h = heur(curStartRow, curStartCol, curEndRow, curEndCol)  //задаем эвристику - сколько осталось до цели
-        startNode.f = startNode.g + startNode.h //f - стоимость от старта до узла + стоимость от узла жо цели
+        val startNode = Node(
+            curStartRow,
+            curStartCol,
+            g = 0.0
+        )      // стартовый и целевой узлы, g - стоимость от старта до этого узла
+        startNode.h = heur(
+            curStartRow,
+            curStartCol,
+            curEndRow,
+            curEndCol
+        )  //задаем эвристику - сколько осталось до цели
+        startNode.f =
+            startNode.g + startNode.h //f - стоимость от старта до узла + стоимость от узла жо цели
         openSet.offer(startNode)
 
-        val nodeMap = mutableMapOf<Pair<Int, Int>, Node>()  // карта для быстрого доступа к узлам по координатам
-        nodeMap[curStartRow to curStartCol] = startNode       // мапа нужна чтобы не проходить по одному и тому же узлу по нескольку раз
+        val nodeMap =
+            mutableMapOf<Pair<Int, Int>, Node>()  // карта для быстрого доступа к узлам по координатам
+        nodeMap[curStartRow to curStartCol] =
+            startNode       // мапа нужна чтобы не проходить по одному и тому же узлу по нескольку раз
 
         while (openSet.isNotEmpty()) {  // пока у нас есть узлы по которым не прошлись
             i++
@@ -188,7 +227,8 @@ object Azvezdochka_algoritm {
                 return@withContext null
             }
 
-            val current = openSet.poll() ?: break // poll в PrioQ берет элемент по компаратору прописанному в объявлении openSet (с минимальным f) а затем удаляет его из очереди
+            val current = openSet.poll()
+                ?: break // poll в PrioQ берет элемент по компаратору прописанному в объявлении openSet (с минимальным f) а затем удаляет его из очереди
             if (closedSet.contains(current)) continue
             closedSet.add(current)  // текущий узел переносим в закрытый список
 
@@ -204,9 +244,13 @@ object Azvezdochka_algoritm {
                 if (newRow !in (0 until rows) || newCol !in (0 until cols)) continue    //until создает диапазон range, здесь мы проверяем не выходим ли мы за границы матрицы
                 if (matrix[newRow][newCol] == 0) continue   // проверяем проходима ли клетко
 
-                val neighbor = nodeMap.getOrPut(newRow to newCol) { // getorput получает значение по ключу или создает новое - узел по координатам матрицы
-                    Node(newRow, newCol)                       // он здесь нужен чтобы не добавлять один и тот же узел в мапу по нескольку раз
-                }                                    //а вообще здесь мы ищем соседний узел
+                val neighbor =
+                    nodeMap.getOrPut(newRow to newCol) { // getorput получает значение по ключу или создает новое - узел по координатам матрицы
+                        Node(
+                            newRow,
+                            newCol
+                        )                       // он здесь нужен чтобы не добавлять один и тот же узел в мапу по нескольку раз
+                    }                                    //а вообще здесь мы ищем соседний узел
 
                 if (closedSet.contains(neighbor)) continue  //если сосед в закрытом списке, то есть мы уже проходились по нему - скип
 
@@ -215,7 +259,8 @@ object Azvezdochka_algoritm {
 
                 //обновляем данные узла соседа
                 if (gDir < neighbor.g || !openSet.contains(neighbor)) { //если g соседа больше - значит мы нашли более короткий путь до старта,
-                    neighbor.parent = current     // если соседа нет в открытом списке или его g был больше - заполняем его данные
+                    neighbor.parent =
+                        current     // если соседа нет в открытом списке или его g был больше - заполняем его данные
                     neighbor.g = gDir
                     neighbor.h = heur(neighbor.row, neighbor.col, curEndRow, curEndCol)
                     neighbor.f = neighbor.g + neighbor.h
@@ -234,7 +279,8 @@ object Azvezdochka_algoritm {
         println("Вызвался reconstructPath(endNode = ${endNode.row}, ${endNode.col})")
 
         val path = mutableListOf<Pair<Int, Int>>()
-        var current: Node? = endNode    //: Node? - проверяем тип подаваемой переменной, если Node - присваиваем endNode, если null - то null
+        var current: Node? =
+            endNode    //: Node? - проверяем тип подаваемой переменной, если Node - присваиваем endNode, если null - то null
         while (current != null) {
             path.add(current.row to current.col)
             current = current.parent
@@ -250,11 +296,13 @@ object Azvezdochka_algoritm {
 
         removeLines(mapViewRef)
 
-        val geoPoints = path.map { (row, col) ->    //переводим каждый узел из элемента матрицы обратно в координаты
-            matrixToGeoPoint(row, col)
-        }
+        val geoPoints =
+            path.map { (row, col) ->    //переводим каждый узел из элемента матрицы обратно в координаты
+                matrixToGeoPoint(row, col)
+            }
 
-        val polyline = Polyline()   // polyline это osmd-шная линия которая рисуется по гео координатам
+        val polyline =
+            Polyline()   // polyline это osmd-шная линия которая рисуется по гео координатам
         polyline.setPoints(geoPoints)
         val paint = polyline.getOutlinePaint()
         paint.color = android.graphics.Color.CYAN   //настрйока цвета и ширины линии
@@ -305,7 +353,12 @@ object Azvezdochka_algoritm {
 
         print("     ")
         for (col in startCol..endCol) {
-            print(String.format("%3d ", col))   //формат в котором число впихивается в строку шириной в 3 символа
+            print(
+                String.format(
+                    "%3d ",
+                    col
+                )
+            )   //формат в котором число впихивается в строку шириной в 3 символа
         }
         println()
 
@@ -331,14 +384,21 @@ object Azvezdochka_algoritm {
     }
     /////////////////////////////////////////////
 
-    fun bfsFind1Cell(matrix: Array<IntArray>, startRow: Int, startCol: Int, radius: Int = 20): Pair<Int, Int>? {  //поиск в ширину ближайшей проходимой клетко
+    fun bfsFind1Cell(
+        matrix: Array<IntArray>,
+        startRow: Int,
+        startCol: Int,
+        radius: Int = 20
+    ): Pair<Int, Int>? {  //поиск в ширину ближайшей проходимой клетко
         println("Запускаем BFS из точки ($startRow, $startCol)")
 
         val rows = 385
         val cols = 305
 
-        val queue = ArrayDeque<Pair<Int, Int>>()    //  deque - двусторонняя очередь оптимизированная для добавления и удаления элементов в начале и конце списка
-        val visited = mutableSetOf<Pair<Int, Int>>()    //list медленный и обычный set нельзя изменить поэтому делаем странный mutableSet
+        val queue =
+            ArrayDeque<Pair<Int, Int>>()    //  deque - двусторонняя очередь оптимизированная для добавления и удаления элементов в начале и конце списка
+        val visited =
+            mutableSetOf<Pair<Int, Int>>()    //list медленный и обычный set нельзя изменить поэтому делаем странный mutableSet
 
         queue.add(Pair(startRow, startCol))
         visited.add(Pair(startRow, startCol))
@@ -373,7 +433,11 @@ object Azvezdochka_algoritm {
 
 
 @Composable
-fun AzvezdochkaScreen(modifier: Modifier = Modifier, mapViewRef: MutableState<MapView?>, matrix: Array<IntArray>?){
+fun AzvezdochkaScreen(
+    modifier: Modifier = Modifier,
+    mapViewRef: MutableState<MapView?>,
+    matrix: Array<IntArray>?
+) {
     val coroutineScope = rememberCoroutineScope()
     var markers by remember { mutableStateOf<List<GeoPoint>>(emptyList()) }
 
@@ -381,25 +445,38 @@ fun AzvezdochkaScreen(modifier: Modifier = Modifier, mapViewRef: MutableState<Ma
         Azvezdochka_algoritm.reset()
         Azvezdochka_algoritm.enableMarkers(mapViewRef, onMarkerAdded = { geoPoint ->
             if (matrix == null) {   // проверка загрузилась ли матрица
-                Toast.makeText(mapViewRef.value?.context, "Матрица еще загружается", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    mapViewRef.value?.context,
+                    "Матрица еще загружается",
+                    Toast.LENGTH_SHORT
+                ).show()
                 return@enableMarkers
             }
 
             println("Поставляенный geoPoint: ${geoPoint.latitude}, ${geoPoint.longitude}")
 
-            Azvezdochka_algoritm.addMarker(mapViewRef.value!!, geoPoint)    // наносим марккер на карту кастомной функцией
-            markers = markers + geoPoint //добавляем маркер который пользователь поставил в лист маркеров
+            Azvezdochka_algoritm.addMarker(
+                mapViewRef.value!!,
+                geoPoint
+            )    // наносим марккер на карту кастомной функцией
+            markers =
+                markers + geoPoint //добавляем маркер который пользователь поставил в лист маркеров
 
             when (markers.size) {
                 2 -> {
-                    val startMatrix = geoPointToMatrix(markers[0])  //преобразуем маркеры в элемент матрицы
+                    val startMatrix =
+                        geoPointToMatrix(markers[0])  //преобразуем маркеры в элемент матрицы
                     val endMatrix = geoPointToMatrix(markers[1])
 
                     val startGeo = matrixToGeoPoint(startMatrix.first, startMatrix.second)
                     val endGeo = matrixToGeoPoint(endMatrix.first, endMatrix.second)
 
                     println("Перевод в матрицу стартовой точк: ${startMatrix.first}, ${startMatrix.second} \n")
-                    Azvezdochka_algoritm.printKusokMatrix(matrix, startMatrix.first, startMatrix.second)
+                    Azvezdochka_algoritm.printKusokMatrix(
+                        matrix,
+                        startMatrix.first,
+                        startMatrix.second
+                    )
 
                     println("\n Перевод в матрицу конечной точки: ${endMatrix.first}, ${endMatrix.second} \n")
                     Azvezdochka_algoritm.printKusokMatrix(matrix, endMatrix.first, endMatrix.second)
@@ -442,6 +519,7 @@ fun AzvezdochkaScreen(modifier: Modifier = Modifier, mapViewRef: MutableState<Ma
                         }
                     }
                 }
+
                 3 -> {
                     Azvezdochka_algoritm.clearAllMarkers(mapViewRef)
                     Azvezdochka_algoritm.removeLines(mapViewRef)

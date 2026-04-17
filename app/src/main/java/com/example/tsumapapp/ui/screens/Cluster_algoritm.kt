@@ -32,23 +32,24 @@ data class Cafe(
     val lon: Double,
 
     )
+
 //Хачу безумку прям в ГК
 val cafes = listOf(
-    Cafe("Столовая ГК",        56.469445, 84.946860),
-    Cafe("Кафе Минутка",        56.469368, 84.946882),
-    Cafe("Сибирские Блины ГК",        56.469346, 84.946673),
-    Cafe("Starbooks",        56.469603, 84.946139),
-    Cafe("Автомат с едой ГК",        56.469309, 84.947649),
-    Cafe("Сыр-Бор",        56.470781, 84.946160),
-    Cafe("Столовая - 2 корупс",        56.468599, 84.945165),
-    Cafe("Xo bakery",        56.468390, 84.945106),
-    Cafe("Автомат с едой - 2 корпус(нексколько)",        56.468768, 84.945042),
-    Cafe("Белка",        56.471141, 84.950165),
-    Cafe("Укромное местечко",        56.472465, 84.948596),
-    Cafe("Столовая номер 5",        56.469744, 84.942338),
-    Cafe("Кафе - Научка",        56.467570, 84.949966),
-    Cafe("Автомат с едой",        56.470431, 84.942636),
-    Cafe("10-й корпус, тут едят людей",        56.468634, 84.943433),
+    Cafe("Столовая ГК", 56.469445, 84.946860),
+    Cafe("Кафе Минутка", 56.469368, 84.946882),
+    Cafe("Сибирские Блины ГК", 56.469346, 84.946673),
+    Cafe("Starbooks", 56.469603, 84.946139),
+    Cafe("Автомат с едой ГК", 56.469309, 84.947649),
+    Cafe("Сыр-Бор", 56.470781, 84.946160),
+    Cafe("Столовая - 2 корупс", 56.468599, 84.945165),
+    Cafe("Xo bakery", 56.468390, 84.945106),
+    Cafe("Автомат с едой - 2 корпус(нексколько)", 56.468768, 84.945042),
+    Cafe("Белка", 56.471141, 84.950165),
+    Cafe("Укромное местечко", 56.472465, 84.948596),
+    Cafe("Столовая номер 5", 56.469744, 84.942338),
+    Cafe("Кафе - Научка", 56.467570, 84.949966),
+    Cafe("Автомат с едой", 56.470431, 84.942636),
+    Cafe("10-й корпус, тут едят людей", 56.468634, 84.943433),
     //🚜КАТЯ ТУТ МОЖНА ДОБОВЛЯТЬ НОВЫЕ МЕСТА ДЛЯ ПОЕСТЬ
     //намудрили вы канеш с этим ОпенСтриииитМэээп
 )
@@ -93,7 +94,8 @@ fun kMeans(cafes: List<Cafe>, k: Int): List<Cluster> {
         val groups = cafes.groupBy { cafe ->
             //возвращаем диапазон индексов списка  тобишь если в enters centers 3 элемента вернет 0, 1, 2
             centers.indices.minByOrNull { i -> //находим элемент с минимальным значением(задаем индекс центра - i
-                val dLat = cafe.lat - centers[i].first//берем i-й центр из списка и берем его first тобишь широту
+                val dLat =
+                    cafe.lat - centers[i].first//берем i-й центр из списка и берем его first тобишь широту
                 val dLon = cafe.lon - centers[i].second//аналогично с долготой
                 dLat * dLat + dLon * dLon//квадрат расстояния между кафе и центром от это мы и вернем
             }!!//результат полюбому не null от прям Отвечаю
@@ -102,12 +104,14 @@ fun kMeans(cafes: List<Cafe>, k: Int): List<Cluster> {
         val newCenters = (0 until k).map { i ->//дял каждого числа из диапозона создаем элемент
             //спрашиваем новый центр дял кластера i
             //от 0 до k
-            val group = groups[i] ?: emptyList()//берем группу с ключом i а если левая часть нуль то берем правую
+            val group = groups[i]
+                ?: emptyList()//берем группу с ключом i а если левая часть нуль то берем правую
             if (group.isEmpty()) {//проверяем пусой ли список
                 centers[i]//оставляем старый центр
             } else {
                 Pair(
-                    group.map { it.lat }.average(),//берем все кафе в группе и создаем списко из их широт
+                    group.map { it.lat }
+                        .average(),//берем все кафе в группе и создаем списко из их широт
                     // average даст нам среднее занчение шо и убдет новым ценитром кластера
                     group.map { it.lon }.average()//тоже самое и для долготы
                 )
@@ -131,21 +135,23 @@ fun kMeans(cafes: List<Cafe>, k: Int): List<Cluster> {
 
 class CafeOverlay(
     private var clusters: List<Cluster>//список уже готовых кластеров для отрисовки
-) : Overlay(){//наследуемся от Overlay OSMDroid
+) : Overlay() {//наследуемся от Overlay OSMDroid
 
     //🚜КАТЯ это кистошка наша
-    private val cafePaint = Paint().apply{
+    private val cafePaint = Paint().apply {
         style = Paint.Style.FILL//🚜заливка без FILL был бы контур
         strokeWidth = 8f
     }
+
     //🚜КАТЯ центр нашег кластера просто крестикс
     private val centerPaint = Paint().apply {
         color = android.graphics.Color.BLACK
         style = Paint.Style.STROKE//🚜Контур без заливки
         strokeWidth = 4f//🚜Толщина
     }
+
     //функция для перересовывания карты вызываем ИЗ вне
-    fun updateClusters(newClusters: List<Cluster>, mapView: MapView){
+    fun updateClusters(newClusters: List<Cluster>, mapView: MapView) {
         clusters = newClusters//обновляем данные
         mapView.invalidate()//говорим Android что этот View устарел, перерисуй - OSMDroid вызовет draw() заново
     }
@@ -154,7 +160,7 @@ class CafeOverlay(
     //override — переопределяем метод родителя
     //OSMDroid вызывает его при каждой перерисовке
     override fun draw(canvas: Canvas, mapView: MapView, shadow: Boolean) {
-        if(shadow) return//Black Lives Matter
+        if (shadow) return//Black Lives Matter
         //projection — переводчик координат широта и долгота -> пиксели экрана с учётом зума и позиции
         val projection = mapView.projection
 
@@ -166,7 +172,7 @@ class CafeOverlay(
 
             //рисуем каждоое кафе в кластере
             cluster.cafes.forEach { cafe ->
-                val point = projection.toPixels(GeoPoint(cafe.lat, cafe. lon), null)
+                val point = projection.toPixels(GeoPoint(cafe.lat, cafe.lon), null)
                 //переводим координаты в пиксели а null — можно передать готовый Point объект
                 //круги кафешек
                 canvas.drawCircle(
@@ -261,7 +267,9 @@ fun ClusterScreen(modifier: Modifier = Modifier) {
             )
             Slider(//🚜ползунок
                 value = k.toFloat(),
-                onValueChange = { k = it.toInt() },//лямбдус вызывается при движении it - новое значение флота конвертируме уже в интус
+                onValueChange = {
+                    k = it.toInt()
+                },//лямбдус вызывается при движении it - новое значение флота конвертируме уже в интус
                 valueRange = 2f..5f,//ренджа кластеров
                 steps = 2,//премежуток шагов
                 modifier = Modifier.fillMaxWidth(),
@@ -275,9 +283,13 @@ fun ClusterScreen(modifier: Modifier = Modifier) {
             Spacer(modifier = Modifier.height(8.dp))//ратсояние между слайдеров и кнопкой
             Button(//вызов татального энвелоупа
                 onClick = {
-                    val result = kMeans(cafes, k)//запускаем нашу мега логику и поулчаем список призывников
+                    val result =
+                        kMeans(cafes, k)//запускаем нашу мега логику и поулчаем список призывников
                     mapView?.let { map ->
-                        cafeOverlay?.updateClusters(result, map)//обновляем оверлей новыми кластерами
+                        cafeOverlay?.updateClusters(
+                            result,
+                            map
+                        )//обновляем оверлей новыми кластерами
                     }
                 }
             ) {

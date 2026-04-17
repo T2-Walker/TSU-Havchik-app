@@ -1,6 +1,7 @@
 package com.example.tsumapapp
 
-enum class AppDestinations( /* странцы в приложении */
+enum class AppDestinations(
+    /* странцы в приложении */
     val label: String,
     val icon: Int,
 ) {
