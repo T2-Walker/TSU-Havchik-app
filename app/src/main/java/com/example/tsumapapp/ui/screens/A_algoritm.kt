@@ -97,7 +97,7 @@ object Azvezdochka_algoritm {
         println("addMarker called, current overlays: ${map.overlays.size}")
         val context = map.context
         val marker = Marker(map)
-        val icon = ContextCompat.getDrawable(context, R.drawable.ic_home)   //🚜 надо иконку для метки на мапе
+        val icon = ContextCompat.getDrawable(context, R.drawable.locate1)   //🚜 надо иконку для метки на мапе
         marker.position = geoPoint
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
         marker.icon = icon

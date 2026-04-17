@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -81,7 +82,8 @@ fun TSUmapappApp(
                     icon = {
                         Icon(
                             painterResource(it.icon),
-                            contentDescription = it.label
+                            contentDescription = it.label,
+                            modifier = Modifier.size(32.dp)
                         )
                     },
                     label = { Text(it.label) },
@@ -114,14 +116,18 @@ fun TSUmapappApp(
                     },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(16.dp)
+                        .padding(
+                            top = 120.dp,
+                            end = 14.dp
+                        )
                 ) {
                     Icon(
                         painter = painterResource(
-                            if (gridVisible) R.drawable.ic_favorite //🚜 надо иконку для сетки - первая иконка если сетка видна, вторая если не видна
-                            else R.drawable.ic_favorite
+                            if (gridVisible) R.drawable.gridoff //🚜 надо иконку для сетки - первая иконка если сетка видна, вторая если не видна
+                            else R.drawable.gridon
                         ),
-                        contentDescription = null
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp)
                     )
                 }
 
