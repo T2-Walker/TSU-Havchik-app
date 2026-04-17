@@ -83,10 +83,12 @@ fun matrixToGeoPoint(row: Int, col: Int): GeoPoint {
     val rows = 385
     val cols = 305
 
+    val invertedrow = rows - row    //опять инвертируем потому что здесь счет тоже идет от юга
+
     val cellSizeLat = (north - south) / rows
     val cellSizeLng = (east - west) / cols
 
-    val latitude = south + (row) * cellSizeLat
+    val latitude = south + (invertedrow) * cellSizeLat
     val longitude = west + (col) * cellSizeLng
 
     return GeoPoint(latitude, longitude)

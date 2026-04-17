@@ -123,10 +123,12 @@ object Azvezdochka_algoritm {
     }
 
     suspend fun findPath(matrix: Array<IntArray>, startRow: Int, startCol: Int, endRow: Int, endCol: Int): List<Pair<Int, Int>>? = withContext(Dispatchers.Default) {  //функция поиска пути
-        println("AStar.findPath called")
+        println("findPath called")
         println("start: ($startRow, $startCol), end: ($endRow, $endCol)")
 
-        if (matrix[startRow][startCol] == 1 || matrix[endRow][endCol] == 1) {    // Проверка валидности старта и цели
+        var i = 0
+        if (matrix[startRow][startCol] == 0 || matrix[endRow][endCol] == 0) {    // Проверка валидности старта и цели
+            println("Старт или конец =0 в матрице")
             return@withContext null  // старт или цель на стене
         }
 
@@ -136,20 +138,26 @@ object Azvezdochka_algoritm {
         val openSet = mutableSetOf<Node>()  // открытйц список - для узлов по которым еще не прошлись
         val closedSet = mutableSetOf<Node>()    // закрытый список - для узлов по которым прошли
 
-        val startNode = Node(startRow, startCol, g = 0.0)      // стартовый и целевой узлы
+        val startNode = Node(startRow, startCol, g = 0.0)      // стартовый и целевой узлы, g - стоимость от старта до этого узла
         startNode.h = heur(startRow, startCol, endRow, endCol)  //задаем эвристику - сколько осталось до цели
-        startNode.f = startNode.g + startNode.h
+        startNode.f = startNode.g + startNode.h //f - стоимость от старта до узла + стоимость от узла жо цели
         openSet.add(startNode)
 
         val nodeMap = mutableMapOf<Pair<Int, Int>, Node>()  // карта для быстрого доступа к узлам по координатам
         nodeMap[startRow to startCol] = startNode
 
         while (openSet.isNotEmpty()) {  // пока у нас есть узлы по которым не прошлись
-            val current = openSet.minByOrNull { it.f } ?: break // minByOrNull находит элемент с самым маленьким значением того что в скобках, ломаем цикл если ссписок пуст
+            i++
+            if (i % 1000 == 0) {
+                println("findPath итерация $i, размер openSet: ${openSet.size}, размер closedSet: ${closedSet.size}")
+            }
+
+            val current = openSet.minByOrNull { it.f } ?: break // minByOrNull находит элемент с самым маленьким значением f, ломаем цикл если ссписок пуст
             openSet.remove(current)
             closedSet.add(current)  // текущий узел переносим в закрытый список
 
             if (current.row == endRow && current.col == endCol) {   // если текущий узел это цель - возвращаем путь, цикл закроется на следующей итерации
+                println("Нашелся целевой узел")
                 return@withContext reconstructPath(current)
             }
 
@@ -158,11 +166,11 @@ object Azvezdochka_algoritm {
                 val newCol = current.col + dc
 
                 if (newRow !in (0 until rows) || newCol !in (0 until cols)) continue    //until создает диапазон range, здесь мы проверяем не выходим ли мы за границы матрицы
-                if (matrix[newRow][newCol] == 1) continue   // проверяем проходима ли клетко
+                if (matrix[newRow][newCol] == 0) continue   // проверяем проходима ли клетко
 
                 val neighbor = nodeMap.getOrPut(newRow to newCol) { // getorput получает значение по ключу или создает новое - узел по координатам матрицы
-                    Node(newRow, newCol)                                // он здесь нужен чтобы не добавлять один и тот же узел в мапу по нескольку раз
-                }                                                     //а вообще здесь мы ищем соседний узел
+                    Node(newRow, newCol)                       // он здесь нужен чтобы не добавлять один и тот же узел в мапу по нескольку раз
+                }                                    //а вообще здесь мы ищем соседний узел и мапа нужна чтобы не проходить по одному и тому же узлу по нескольку раз
 
                 if (closedSet.contains(neighbor)) continue  //если сосед в закрытом списке, то есть мы уже проходились по нему - скип
 
@@ -182,18 +190,22 @@ object Azvezdochka_algoritm {
                 }
             }
         }
-        println("AStar.findPath: path not found")
+        println("findPath не нашел путь, не найден целевой узел, итераций: $i")
         return@withContext null //если мы не нашли целевой узел - возвращаем null
     }
 
     private fun reconstructPath(endNode: Node): List<Pair<Int, Int>> {  // восстанавливаем путь чтобы потом нарисовать его на карте
+        println("Вызвался reconstructPath(endNode = ${endNode.row}, ${endNode.col})")
+
         val path = mutableListOf<Pair<Int, Int>>()
-        var current: Node? = endNode
+        var current: Node? = endNode    //: Node? - проверяем тип подаваемой переменной, если Node - присваиваем endNode, если null - то null
         while (current != null) {
             path.add(current.row to current.col)
             current = current.parent
         }
+        println("Нашелся путь: ${path.reversed()}")
         return path.reversed()  // от старта к цели
+
     }
 
     //функция для отображения пути на карте
@@ -226,6 +238,62 @@ object Azvezdochka_algoritm {
         currentOverlay = null
         isInitialized = false
     }
+
+    ///////////////////////////////////////////////////////
+    fun printKusokMatrix(matrix: Array<IntArray>, row: Int, col: Int, size: Int = 20) {
+        val rows = matrix.size
+        val cols = matrix[0].size
+
+        val half = size / 2
+        var startRow = row - half
+        var endRow = row + half
+        var startCol = col - half
+        var endCol = col + half
+
+        if (startRow < 0) {
+            endRow -= startRow
+            startRow = 0
+        }
+        if (endRow >= rows) {
+            startRow -= (endRow - rows + 1)
+            endRow = rows - 1
+        }
+        if (startCol < 0) {
+            endCol -= startCol
+            startCol = 0
+        }
+        if (endCol >= cols) {
+            startCol -= (endCol - cols + 1)
+            endCol = cols - 1
+        }
+
+        print("     ")
+        for (col in startCol..endCol) {
+            print(String.format("%3d ", col))
+        }
+        println()
+
+        print("     ")
+        for (col in startCol..endCol) {
+            print("----")
+        }
+        println()
+
+        for (row in startRow..endRow) {
+            print(String.format("%4d |", row))
+            for (col in startCol..endCol) {
+                val value = matrix[row][col]
+                val symbol = when (value) {
+                    0 -> " . "
+                    1 -> "███"
+                    else -> String.format("%3d", value)
+                }
+                print(symbol)
+            }
+            println()
+        }
+    }
+    /////////////////////////////////////////////
 }
 
 @Composable
@@ -254,8 +322,12 @@ fun AzvezdochkaScreen(modifier: Modifier = Modifier, mapViewRef: MutableState<Ma
                     val startGeo = matrixToGeoPoint(startMatrix.first, startMatrix.second)
                     val endGeo = matrixToGeoPoint(endMatrix.first, endMatrix.second)
 
-                    println("Перевод в матрицу стартовой точк: ${startMatrix.first}, ${startMatrix.second}")
-                    println("Перевод в матрицу конечной точки: ${endMatrix.first}, ${endMatrix.second}")
+                    println("Перевод в матрицу стартовой точк: ${startMatrix.first}, ${startMatrix.second} \n")
+                    Azvezdochka_algoritm.printKusokMatrix(matrix, startMatrix.first, startMatrix.second)
+
+                    println("\n Перевод в матрицу конечной точки: ${endMatrix.first}, ${endMatrix.second} \n")
+                    Azvezdochka_algoritm.printKusokMatrix(matrix, endMatrix.first, endMatrix.second)
+
                     println("Обратно старт: ${startGeo.latitude}, ${startGeo.longitude}")
                     println("Обратно конец: ${endGeo.latitude}, ${endGeo.longitude}")
                     println("Разница старт: ${geoPoint.latitude - startGeo.latitude}, ${geoPoint.longitude - startGeo.longitude}")
@@ -281,8 +353,10 @@ fun AzvezdochkaScreen(modifier: Modifier = Modifier, mapViewRef: MutableState<Ma
 
                         withContext(Dispatchers.Main) {
                             if (path != null) {
+                                println("Функция пути не выдала null")
                                 Azvezdochka_algoritm.displayPath(mapViewRef, path)
                             } else {
+                                println("Путь не найден")
                                 Toast.makeText( //toast это виджет для высплывающих сообщений
                                     mapViewRef.value?.context,
                                     "Путь не найден",
